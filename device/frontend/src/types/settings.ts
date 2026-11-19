@@ -143,6 +143,7 @@ export interface DisplayMode {
   width: number;
   height: number;
   refresh: number;
+  interlaced: boolean;
   preferred: boolean;
   fits_screen: boolean;
 }

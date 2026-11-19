@@ -57,8 +57,8 @@ fn band_over_an_image_leaves_out_the_branding() {
     let svg = describe(80, LinkState::Unplugged, &wifi, &status, true)
         .over_image("data:image/png;base64,AAAA", Scaling::Fit);
 
-    assert!(!svg.contains("SCAN TO JOIN"));
-    assert!(!svg.contains(">YStreamer</text>"));
+    assert!(!svg.contains("SCAN TO CONNECT"));
+    assert!(!svg.contains(">TMStreamer</text>"));
 }
 
 #[test]
@@ -81,16 +81,21 @@ fn image_under_the_band_is_fitted_or_fills_the_screen() {
 fn access_point_password_can_be_kept_off_the_screen() {
     let (wifi, status) = access_point();
     let screen = describe(80, LinkState::Unplugged, &wifi, &status, false);
-    for svg in [screen.svg(), screen.over_image("data:,", Scaling::Fit)] {
-        assert!(!svg.contains("flyfast123"));
-        assert!(!svg.contains("SCAN TO JOIN"));
-        // still says which network to join and where to go
-        assert!(svg.contains("YStreamer"));
-        assert!(svg.contains("10.42.0.1"));
-    }
+    let splash = screen.svg();
+    let overlay = screen.over_image("data:,", Scaling::Fit);
+
+    assert!(!splash.contains("flyfast123"));
+    assert!(!splash.contains("SCAN TO CONNECT"));
+    assert!(splash.contains("TMStreamer"));
+    assert!(splash.contains("10.42.0.1"));
+
+    assert!(!overlay.contains("flyfast123"));
+    assert!(!overlay.contains("SCAN TO CONNECT"));
+    assert!(!overlay.contains("TMStreamer"));
+    assert!(overlay.contains("10.42.0.1"));
     assert!(
         describe(80, LinkState::Unplugged, &wifi, &status, true)
             .svg()
-            .contains("SCAN TO JOIN")
+            .contains("SCAN TO CONNECT")
     );
 }

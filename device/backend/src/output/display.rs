@@ -49,6 +49,8 @@ pub struct ModeInfo {
     pub width: u16,
     pub height: u16,
     pub refresh: f64,
+    /// True when the display mode uses interlaced scanning
+    pub interlaced: bool,
     /// The screen's own choice
     pub preferred: bool,
     /// Same shape as the panel. Otherwise the screen stretches it, and
@@ -116,9 +118,6 @@ impl Display {
                 let panel = info.size().filter(|&(w, h)| w > 0 && h > 0);
                 let mut modes: Vec<(ModeInfo, Mode)> = Vec::new();
                 for &m in info.modes() {
-                    if m.flags().contains(ModeFlags::INTERLACE) {
-                        continue;
-                    }
                     let mut mi = describe(&m);
                     if let Some((pw, ph)) = panel {
                         let shape = mi.width as f64 / mi.height as f64;
@@ -153,16 +152,28 @@ impl Display {
     /// Not the screen's own preference: 4K screens prefer 4K, which the Pi
     /// can only drive at 30 Hz
     fn best_for_video(&self) -> Option<&(ModeInfo, Mode)> {
+        let suitable =
+            |m: &&(ModeInfo, Mode)| m.0.fits_screen && m.0.width <= 1920 && m.0.height <= 1080;
+        let rank = |(m, _): &&(ModeInfo, Mode)| {
+            let off_60 = ((m.refresh - 60.0).abs() * 100.0) as u32;
+            (
+                off_60 > 100,
+                std::cmp::Reverse(m.width as u32 * m.height as u32),
+                off_60,
+            )
+        };
+
         self.modes
             .iter()
-            .filter(|(m, _)| m.fits_screen && m.width <= 1920 && m.height <= 1080)
-            .min_by_key(|(m, _)| {
-                let off_60 = ((m.refresh - 60.0).abs() * 100.0) as u32;
-                (
-                    off_60 > 100,
-                    std::cmp::Reverse(m.width as u32 * m.height as u32),
-                    off_60,
-                )
+            .filter(suitable)
+            .filter(|(m, _)| !m.interlaced)
+            .min_by_key(rank)
+            .or_else(|| {
+                self.modes
+                    .iter()
+                    .filter(suitable)
+                    .filter(|(m, _)| m.interlaced)
+                    .min_by_key(rank)
             })
     }
 
@@ -387,16 +398,25 @@ fn describe(m: &Mode) -> ModeInfo {
     let (w, h) = m.size();
     let (_, _, htotal) = m.hsync();
     let (_, _, vtotal) = m.vsync();
-    let refresh = if htotal > 0 && vtotal > 0 {
+    let interlaced = m.flags().contains(ModeFlags::INTERLACE);
+    let mut refresh = if htotal > 0 && vtotal > 0 {
         m.clock() as f64 * 1000.0 / (htotal as f64 * vtotal as f64)
     } else {
         m.vrefresh() as f64
     };
+
+    // DRM modeline timing describes an interlaced frame; report field rate
+    // so 1080i50 is shown as 50 Hz rather than 25 Hz.
+    if interlaced {
+        refresh *= 2.0;
+    }
+
     ModeInfo {
-        id: format!("{w}x{h}@{refresh:.2}"),
+        id: format!("{w}x{h}{}@{refresh:.2}", if interlaced { "i" } else { "" }),
         width: w,
         height: h,
         refresh,
+        interlaced,
         preferred: m.mode_type().contains(ModeTypeFlags::PREFERRED),
         fits_screen: true,
     }

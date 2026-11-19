@@ -5,7 +5,7 @@
 
   interface Props {
     value: Val;
-    options: { label: string; value: Val }[];
+    options: { label: string; value: Val; disabled?: boolean }[];
     id?: string;
     disabled?: boolean;
     class?: string;
@@ -31,7 +31,7 @@
     class="w-full appearance-none rounded-md border border-line bg-surface-2 py-1.5 pr-8 pl-3 text-[13px] text-fg transition-colors outline-none hover:border-line-strong focus:border-primary disabled:pointer-events-none"
   >
     {#each options as o (o.value)}
-      <option value={o.value}>{o.label}</option>
+      <option value={o.value} disabled={o.disabled}>{o.label}</option>
     {/each}
   </select>
   <ChevronDown

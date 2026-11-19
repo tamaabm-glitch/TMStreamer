@@ -391,7 +391,7 @@ impl Screen {
             r#"<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}">
 <rect width="100%" height="100%" fill="{BASE}"/>
 <image x="{logo_x}" y="{LOGO_Y}" width="{LOGO_SIZE}" height="{LOGO_SIZE}" href="data:{LOGO_MIME};base64,{logo}"/>
-<text x="{cx}" y="{wordmark_y}" text-anchor="middle" font-family="{SANS}" font-size="92" font-weight="600" letter-spacing="-2" fill="{FG}">YStreamer</text>
+<text x="{cx}" y="{wordmark_y}" text-anchor="middle" font-family="{SANS}" font-size="92" font-weight="600" letter-spacing="-2" fill="{FG}">TMStreamer</text>
 <text x="{cx}" y="{STATUS_Y}" text-anchor="middle" font-family="{SANS}" font-size="32" fill="{tone}">{status}</text>
 "#,
             logo_x = cx - LOGO_SIZE / 2,
@@ -416,7 +416,7 @@ impl Screen {
             s.push_str(&card);
             let _ = writeln!(
                 s,
-                r#"<text x="{}" y="{}" text-anchor="middle" font-family="{SANS}" font-size="20" font-weight="600" letter-spacing="3" fill="{FAINT}">SCAN TO JOIN WI-FI</text>"#,
+                r#"<text x="{}" y="{}" text-anchor="middle" font-family="{SANS}" font-size="20" font-weight="600" letter-spacing="3" fill="{FAINT}">SCAN TO CONNECT</text>"#,
                 WIDTH - MARGIN - QR_SIZE / 2,
                 LOGO_Y + QR_SIZE + 48,
             );

@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, message } from "@/api/client";
@@ -14,6 +15,7 @@
   import { btn } from "@/components/ui/buttons";
   import { developer } from "@/stores/developer.svelte";
   import { auth } from "@/stores/auth.svelte";
+
   let {
     advanced = $bindable(),
     tab,
@@ -28,6 +30,7 @@
     danger: boolean;
     run: () => void;
   }
+
   let pending = $state<Pending | null>(null);
   let confirmOpen = $state(false);
 
@@ -43,11 +46,11 @@
     Omit<Pending, "run"> & { done: string }
   > = {
     restart: {
-      title: "Restart YStreamer?",
+      title: "Restart TMStreamer?",
       message: "Video stops for a few seconds while the service restarts.",
       confirmLabel: "Restart",
       danger: false,
-      done: "Restarting YStreamer…",
+      done: "Restarting TMStreamer…",
     },
     "restart-usb": {
       title: "Restart the USB link?",
@@ -81,7 +84,7 @@
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `ystreamer-${info?.hostname ?? "settings"}.json`;
+    a.download = `tmstreamer-${info?.hostname ?? "settings"}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -96,6 +99,7 @@
       snackbar.show("That file isn't valid JSON", true);
       return;
     }
+
     ask({
       title: "Import settings?",
       message:
@@ -147,12 +151,13 @@
     <Card title="Service">
       {#if noSystemd}
         <p class="px-4 py-3 text-[12px] text-muted">
-          YStreamer isn't running under systemd, so it can't restart itself.
+          TMStreamer isn't running under systemd, so it can't restart itself.
           Install
           <code class="font-mono">{info?.unit}</code> to enable restarts and logs.
         </p>
       {/if}
-      <Field label="Restart YStreamer">
+
+      <Field label="Restart TMStreamer">
         <button
           type="button"
           class={btn.plain}
@@ -162,6 +167,7 @@
           Restart
         </button>
       </Field>
+
       <Field label="Restart USB link">
         <button
           type="button"
@@ -177,10 +183,11 @@
   {:else if tab === "configuration"}
     <Card title="Configuration">
       <Field label="Export settings">
-        <button type="button" class={btn.plain} onclick={exportConfig}
-          >Export</button
-        >
+        <button type="button" class={btn.plain} onclick={exportConfig}>
+          Export
+        </button>
       </Field>
+
       <Field label="Import settings">
         <input
           bind:this={fileInput}
@@ -196,14 +203,19 @@
         <button
           type="button"
           class={btn.plain}
-          onclick={() => fileInput?.click()}>Import…</button
+          onclick={() => fileInput?.click()}
         >
+          Import…
+        </button>
       </Field>
+
       <Field
         label="Reset to defaults"
         help={info ? `Stored in ${info.settings_path}` : undefined}
       >
-        <button type="button" class={btn.danger} onclick={reset}>Reset</button>
+        <button type="button" class={btn.danger} onclick={reset}>
+          Reset
+        </button>
       </Field>
     </Card>
   {:else if tab === "developer"}
@@ -211,16 +223,18 @@
       <Field
         label="Developer mode"
         for="developer"
-        help="Turn it back on by tapping the YStreamer version in System → About 7 times."
+        help="Turn it back on by tapping the TMStreamer version in System → About 7 times."
       >
         <Switch
           id="developer"
           bind:checked={() => developer.enabled, (on) => developer.set(on)}
         />
       </Field>
+
       <Field label="Verbose logging" for="verbose">
         <Switch id="verbose" bind:checked={advanced.verbose_logs} />
       </Field>
+
       <Field
         label="Terminal"
         for="terminal"

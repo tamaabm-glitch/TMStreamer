@@ -39,7 +39,7 @@ export interface AircraftStorage {
   secs_left: number;
 }
 
-/** The aircraft's own recording and storage, not YStreamer's */
+/** The aircraft's own recording and storage, not TMStreamer's */
 export interface AircraftRecorder {
   recording: boolean;
   record_secs: number;

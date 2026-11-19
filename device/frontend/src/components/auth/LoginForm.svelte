@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { message } from "@/api/client";
   import { auth } from "@/stores/auth.svelte";
@@ -31,7 +32,21 @@
   onsubmit={submit}
   class="mx-auto flex w-full max-w-sm flex-col gap-4 rounded-xl border border-line bg-surface p-6 shadow-sm"
 >
-  <div class="flex items-center gap-3">
+  <div class="flex flex-col items-center gap-3 pb-2 text-center">
+    <img
+      src="/logo.png"
+      alt="TMStreamer - NEW GALIH MULTIMEDIA"
+      class="h-auto w-full max-w-[240px] object-contain"
+    />
+    <div>
+      <h2 class="text-[17px] font-semibold text-fg">TMStreamer</h2>
+      <p class="text-[11px] font-medium tracking-[0.2em] text-primary">
+        NEW GALIH MULTIMEDIA
+      </p>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3 border-t border-line pt-4">
     <span
       class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2"
     >
@@ -43,7 +58,7 @@
     </div>
   </div>
 
-  <!-- Lets password managers file the password under this device -->
+  <!-- Keep original username for password manager compatibility -->
   <input
     type="text"
     name="username"
@@ -52,6 +67,7 @@
     readonly
     hidden
   />
+
   <label class="flex flex-col gap-1.5 text-[13px] text-fg">
     Password
     <TextField
@@ -70,4 +86,8 @@
   <button type="submit" class={btn.primary} disabled={!password || busy}>
     {busy ? "Checking…" : "Log in"}
   </button>
+
+  <p class="pt-2 text-center text-[10px] text-muted">
+    TMStreamer V1.0 · NEW GALIH MULTIMEDIA
+  </p>
 </form>

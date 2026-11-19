@@ -36,7 +36,7 @@
 
   const ETHERNET_HELP: Record<string, string> = {
     system:
-      "YStreamer leaves Ethernet alone and uses whatever the OS is set up with.",
+      "TMStreamer leaves Ethernet alone and uses whatever the OS is set up with.",
     auto: "Get an address from the network's router (DHCP).",
     static:
       "Use a fixed address. If you're connected over Ethernet, make sure it's on your network, or you'll need WiFi to get back in.",
@@ -71,7 +71,7 @@
 
   const apHelp = $derived(
     apOn
-      ? "Always broadcast YStreamer's own 2.4 GHz network. Phones and laptops connect to it directly."
+      ? "Always broadcast TMStreamer's own 2.4 GHz network. Phones and laptops connect to it directly."
       : "Only starts by itself when the fallback below is on.",
   );
 

@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, message } from "@/api/client";
@@ -28,12 +29,15 @@
   /** `quiet` is the background refresh, which doesn't touch the button */
   async function load(quiet = false) {
     if (!quiet) loading = true;
+
     try {
       const next = await api.logs();
+
       if (logEl)
         atBottom =
           logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight <
           BOTTOM_SLACK_PX;
+
       // Unchanged text is left alone, so a selection survives
       if (next !== logs) logs = next;
       error = null;
@@ -47,10 +51,12 @@
 
   function setRefresh(on: boolean) {
     refresh = on;
+
     try {
       if (on) localStorage.removeItem(REFRESH_KEY);
       else localStorage.setItem(REFRESH_KEY, "0");
     } catch {}
+
     if (on) load(true);
   }
 
@@ -61,9 +67,11 @@
 
   $effect(() => {
     if (!refresh || noSystemd) return;
+
     const timer = setInterval(() => {
       if (!document.hidden) load(true);
     }, REFRESH_MS);
+
     return () => clearInterval(timer);
   });
 
@@ -71,6 +79,7 @@
     try {
       noSystemd = !(await api.system()).systemd;
     } catch {}
+
     if (!noSystemd) load();
   });
 </script>
@@ -78,8 +87,9 @@
 <div class="flex flex-col gap-4">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-[12px] text-muted">
-      The latest lines from the YStreamer service.
+      The latest lines from the TMStreamer service.
     </p>
+
     <div class="flex items-center gap-4">
       <label
         for="logs-refresh"
@@ -92,6 +102,7 @@
           bind:checked={() => refresh, (on) => setRefresh(on)}
         />
       </label>
+
       <button
         type="button"
         class={btn.plain}
@@ -105,7 +116,7 @@
 
   {#if noSystemd}
     <p class="text-[13px] text-muted">
-      Logs need YStreamer to run under systemd.
+      Logs need the TMStreamer service to run under systemd.
     </p>
   {:else if error}
     <p class="text-[13px] text-down">{error}</p>

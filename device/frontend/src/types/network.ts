@@ -19,7 +19,7 @@ export interface NetworkStatus {
   internet_via: string | null;
   /** usbmuxd is installed, which iPhones need */
   iphone_support: boolean;
-  /** The ready-made image: YStreamer owns the network, no "System" modes */
+  /** The ready-made image: TMStreamer owns the network, no "System" modes */
   image: boolean;
   fallback_active: boolean;
   /** Why the fallback access point is on, as a sentence */

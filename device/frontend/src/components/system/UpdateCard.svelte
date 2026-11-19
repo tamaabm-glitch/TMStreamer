@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, message } from "@/api/client";
@@ -44,10 +45,13 @@
       underway = true;
       return;
     }
+
     status = next;
     latest ??= next.available;
     update.available = next.available;
+
     if (!installing) return;
+
     if (next.installing) {
       underway = true;
     } else if (underway && next.current === installing && !next.failure) {
@@ -61,14 +65,19 @@
   async function upload(e: Event) {
     const files = [...((e.currentTarget as HTMLInputElement).files ?? [])];
     input.value = "";
+
     if (!files.length) return;
+
     const deb = files.find((f) => f.name.endsWith(".deb"));
     const sig = files.find((f) => f.name.endsWith(".sig"));
+
     if (!deb || !sig) {
       snackbar.show("Choose both the .deb file and its .sig file", true);
       return;
     }
+
     busy = true;
+
     try {
       status = await api.uploadUpdate(deb, (await sig.text()).trim());
     } catch (e) {
@@ -80,6 +89,7 @@
 
   async function check() {
     checking = true;
+
     try {
       latest = await api.checkUpdate();
       update.available = latest.newer ? latest : null;
@@ -92,6 +102,7 @@
 
   async function download() {
     downloading = true;
+
     try {
       status = await api.downloadUpdate();
       latest = null;
@@ -117,11 +128,14 @@
 
   async function run() {
     const version = confirm === "install" ? status?.staged : status?.previous;
+
     if (!version) return;
+
     try {
       await (confirm === "install"
         ? api.installUpdate()
         : api.rollBackUpdate());
+
       underway = false;
       installing = version;
     } catch (e) {
@@ -135,13 +149,14 @@
     <p class="px-4 py-3 text-[13px] text-muted">Loading…</p>
   {:else if installing}
     <p class="px-4 py-3 text-[13px] text-muted">
-      Installing {installing}… Video stops while YStreamer restarts, and this
+      Installing {installing}… Video stops while TMStreamer restarts, and this
       page reloads when it's done.
     </p>
   {:else}
     <Field label="Installed version">
       <span class="text-[13px] text-muted tabular-nums">{status.current}</span>
     </Field>
+
     {#if status.staged}
       <Field
         label="Ready to install"
@@ -175,6 +190,7 @@
             {downloading ? "Downloading…" : "Download"}
           </button>
         </Field>
+
         {#if latest.notes}
           <div class="px-4 pb-3">
             <ReleaseNotes notes={latest.notes} />
@@ -195,6 +211,7 @@
           </button>
         </Field>
       {/if}
+
       <Field
         label="Install from files"
         help="Choose a release's .deb file together with its .sig file."
@@ -209,6 +226,7 @@
         </button>
       </Field>
     {/if}
+
     {#if status.previous}
       <Field label="Previous version">
         <div class="flex items-center gap-2">
@@ -225,6 +243,7 @@
         </div>
       </Field>
     {/if}
+
     <Field
       label="Check automatically"
       for="update-check"
@@ -232,6 +251,7 @@
     >
       <Switch id="update-check" bind:checked={advanced.check_for_updates} />
     </Field>
+
     {#if status.failure}
       <div class="border-t border-line px-4 py-3">
         <p class="text-[13px] text-down">
@@ -242,6 +262,7 @@
             Installing {status.failure.version} failed.
           {/if}
         </p>
+
         {#if status.failure.log}
           <pre
             class="mt-2 max-h-48 overflow-auto rounded-lg bg-surface-2 p-3 font-mono text-[11px] whitespace-pre-wrap text-muted">{status
@@ -250,6 +271,7 @@
       </div>
     {/if}
   {/if}
+
   <input
     bind:this={input}
     type="file"
@@ -265,7 +287,7 @@
   title={confirm === "install"
     ? `Install ${status?.staged}?`
     : `Roll back to ${status?.previous}?`}
-  message="Video, streams and any recording stop while YStreamer restarts. Don't unplug the device until it's back."
+  message="Video, streams and any recording stop while TMStreamer restarts. Don't unplug the device until it's back."
   confirmLabel={confirm === "install" ? "Install" : "Roll back"}
   onconfirm={run}
 />

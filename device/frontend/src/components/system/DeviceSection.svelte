@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import Segmented from "@/components/ui/Segmented.svelte";
   import { theme, type Theme } from "@/stores/theme.svelte";
@@ -20,6 +21,7 @@
   import PowerCard from "@/components/system/PowerCard.svelte";
   import { developer } from "@/stores/developer.svelte";
   import { settings } from "@/stores/settings.svelte";
+
   let {
     device = $bindable(),
     tab,
@@ -33,6 +35,7 @@
       !!settings.saved &&
       info.hostname !== settings.saved.device.hostname,
   );
+
   let timer: ReturnType<typeof setInterval> | null = null;
 
   async function refresh() {
@@ -72,7 +75,7 @@
     if (info.model) r.push(["Board", info.model]);
     if (info.os) r.push(["System", info.os]);
     if (info.kernel) r.push(["Kernel", info.kernel]);
-    r.push(["YStreamer", info.version]);
+    r.push(["TMStreamer", info.version]);
     if (info.serial) r.push(["Serial", info.serial]);
     if (info.uptime_secs !== null)
       r.push(["Uptime", duration(info.uptime_secs)]);
@@ -135,7 +138,7 @@
     if (!info) return NEW_ISSUE;
     const source = settings.saved?.input.mode;
     const lines: [string, string | null | undefined][] = [
-      ["YStreamer", info.version],
+      ["TMStreamer", info.version],
       [
         "Installed from",
         isImage === null
@@ -168,6 +171,7 @@
   });
 
   let copyingLogs = $state(false);
+
   async function copyLogs() {
     copyingLogs = true;
     try {
@@ -179,6 +183,7 @@
       copyingLogs = false;
     }
   }
+
   onDestroy(() => {
     if (timer) clearInterval(timer);
   });
@@ -280,9 +285,7 @@
     </Card>
 
     <AccessCard />
-
     <SshCard />
-
     <PowerCard />
   {:else if tab === "about"}
     <Card title="About">
@@ -295,7 +298,7 @@
               k,
               v,
               false,
-              k === "YStreamer" ? () => developer.tap() : undefined,
+              k === "TMStreamer" ? () => developer.tap() : undefined,
             )}
           {/each}
           {#if power}

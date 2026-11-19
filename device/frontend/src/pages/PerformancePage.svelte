@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { metrics } from "@/stores/metrics.svelte";
@@ -33,6 +34,7 @@
 
   function setRange(v: number) {
     windowSecs = v;
+
     try {
       localStorage.setItem("ystreamer.perf.range", String(v));
     } catch {}
@@ -60,10 +62,11 @@
   const cpu = $derived(
     lines([
       ["cpu", "Total", BLUE, true],
-      ["cpu_app", "YStreamer", ORANGE],
+      ["cpu_app", "TMStreamer", ORANGE],
       ["gpu", "GPU (3D)", PURPLE],
     ]),
   );
+
   const cores = $derived(
     Object.keys(s)
       .filter((name) => /^cpu\d+$/.test(name))
@@ -74,17 +77,26 @@
         values: s[name],
       })),
   );
+
   const memory = $derived(
     lines([
       ["mem_used", "In use", BLUE, true],
-      ["mem_app", "YStreamer", ORANGE],
+      ["mem_app", "TMStreamer", ORANGE],
     ]),
   );
+
   const memTotal = $derived(
     s.mem_total?.findLast((v) => v !== null) ?? undefined,
   );
-  const temperature = $derived(lines([["temp", "Processor", RED, true]]));
-  const clock = $derived(lines([["freq", "Clock", TEAL, true]]));
+
+  const temperature = $derived(
+    lines([["temp", "Processor", RED, true]]),
+  );
+
+  const clock = $derived(
+    lines([["freq", "Clock", TEAL, true]]),
+  );
+
   const frameRate = $derived(
     lines([
       ["fps_in", "Source", BLUE, true],
@@ -92,12 +104,14 @@
       ["hdmi_dropped", "HDMI dropped", RED],
     ]),
   );
+
   const bitrate = $derived(
     lines([
       ["kbps_in", "Source", BLUE, true],
       ["kbps_rtmp", "RTMP", ORANGE],
     ]),
   );
+
   const viewers = $derived(
     lines([
       ["viewers_web", "Browsers", BLUE],
@@ -107,7 +121,10 @@
       ["recording", "Recording", RED],
     ]),
   );
-  const wifi = $derived(lines([["wifi_dbm", "Signal", GREEN]]));
+
+  const wifi = $derived(
+    lines([["wifi_dbm", "Signal", GREEN]]),
+  );
 
   const interfaces = $derived(
     [
@@ -118,6 +135,7 @@
       ),
     ].sort(),
   );
+
   const traffic = (direction: "tx" | "rx") =>
     interfaces.map((name, i) => ({
       label: name,
@@ -125,26 +143,33 @@
       values: s[`net.${name}.${direction}`] ?? [],
       fill: interfaces.length === 1,
     }));
+
   const sent = $derived(traffic("tx"));
   const received = $derived(traffic("rx"));
 
   const underVoltage = $derived.by(() => {
     const flags = s.undervoltage;
     if (!flags) return false;
+
     const since = metrics.t[metrics.t.length - 1] - windowSecs * 1000;
+
     return flags.some((v, i) => v === 1 && metrics.t[i] >= since);
   });
 
   const percent = (v: number) => `${Math.round(v)}%`;
+
   const megabytes = (v: number) =>
     v >= 1024 ? `${(v / 1024).toFixed(1)} GB` : `${Math.round(v)} MB`;
+
   const degrees = (v: number) => `${v.toFixed(1)} °C`;
   const megahertz = (v: number) => `${Math.round(v)} MHz`;
   const fps = (v: number) => `${Math.round(v)} fps`;
+
   const rate = (kbps: number) =>
     kbps >= 1000
       ? `${(kbps / 1000).toFixed(1)} Mbit/s`
       : `${Math.round(kbps)} kbit/s`;
+
   const count = (v: number) => String(Math.round(v));
   const dbm = (v: number) => `${Math.round(v)} dBm`;
 </script>
@@ -152,9 +177,10 @@
 <div class="flex flex-col gap-4">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-[12px] text-muted">
-      Recorded every second since the service started; the last half hour is
-      kept.
+      TMStreamer performance monitoring. Recorded every second since the
+      service started; the last half hour is kept.
     </p>
+
     <div class="w-full sm:w-80">
       <Segmented options={RANGES} value={windowSecs} onchange={setRange} />
     </div>
@@ -165,9 +191,9 @@
   {:else}
     {#if underVoltage}
       <p class="rounded-lg bg-down/10 px-4 py-3 text-[13px] text-down">
-        The power supply dipped below what the Pi needs during this period. That
-        causes glitches and USB drop-outs; use a stronger supply or a shorter
-        cable.
+        The power supply dipped below what the Pi needs during this period.
+        That causes glitches and USB drop-outs; use a stronger supply or a
+        shorter cable.
       </p>
     {/if}
 

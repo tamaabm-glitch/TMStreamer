@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, message } from "@/api/client";
@@ -33,11 +34,15 @@
   async function setEnabled(on: boolean) {
     busy = true;
     switching = on;
+
     try {
       status = await api.setSsh(on);
-      if (status.enabled === on) snackbar.show(on ? "SSH is on" : "SSH is off");
-      else
+
+      if (status.enabled === on) {
+        snackbar.show(on ? "SSH is on" : "SSH is off");
+      } else {
         snackbar.show(on ? "SSH didn't turn on" : "SSH didn't turn off", true);
+      }
     } catch (e) {
       snackbar.show(message(e), true);
       // It may have got partway, so show what's true now
@@ -69,9 +74,12 @@
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
+
     if (problem !== null || busy) return;
+
     busy = true;
     error = null;
+
     try {
       status = await api.setSshPassword(next);
       snackbar.show("SSH password changed");
@@ -88,8 +96,8 @@
   <Card title="SSH">
     {#if status.enabled && status.default_password}
       <p class="bg-warn/10 px-4 py-3 text-[12px] text-fg">
-        The password is still the one every YStreamer ships with, so anyone on
-        the network can log in. Change it below.
+        The password is still the one every TMStreamer ships with, so anyone
+        on the network can log in. Change it below.
       </p>
     {/if}
 
@@ -130,9 +138,11 @@
           readonly
           hidden
         />
+
         <Field label="New password" stacked>
           <TextField secret autocomplete="new-password" bind:value={next} />
         </Field>
+
         <Field label="Repeat new password" stacked>
           <TextField secret autocomplete="new-password" bind:value={confirm} />
         </Field>
@@ -145,8 +155,11 @@
           <button
             type="button"
             class={btn.text}
-            onclick={() => (changing = false)}>Cancel</button
+            onclick={() => (changing = false)}
           >
+            Cancel
+          </button>
+
           <button
             type="submit"
             class={btn.primary}

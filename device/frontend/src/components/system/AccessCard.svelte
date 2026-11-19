@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { message } from "@/api/client";
   import { auth } from "@/stores/auth.svelte";
@@ -68,7 +69,7 @@
   <Field
     label="Password"
     help={auth.enabled
-      ? "Changing anything needs a login. Forgot it? Delete /etc/ystreamer/auth.json on the device."
+      ? "Changing anything needs a login. Forgot it? Delete /etc/ystreamer/auth.json on the TMStreamer device."
       : "Not set: anyone on the network can change settings."}
   >
     <div class="flex gap-2">

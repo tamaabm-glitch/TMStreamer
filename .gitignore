@@ -1,0 +1,18 @@
+# Private configuration and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local backups
+BACKUP_BEFORE_REBRAND_20261118/
+*.backup
+*.bak
+
+# Build outputs and dependencies
+node_modules/
+target/
+dist/
+build/

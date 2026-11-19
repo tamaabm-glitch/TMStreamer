@@ -1,9 +1,9 @@
 [package]
 name = "ystreamer"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "GPL-3.0-only"
-description = "Video from DJI goggles or a USB camera to HDMI, streams, the browser and recordings"
+description = "TMStreamer - NEW GALIH MULTIMEDIA: DJI video streaming, HDMI output, browser viewing and recording"
 
 [[bin]]
 name = "ystreamer"

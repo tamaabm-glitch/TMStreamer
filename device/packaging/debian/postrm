@@ -1,3 +1,4 @@
+
 #!/bin/sh
 set -e
 
@@ -5,23 +6,28 @@ CONFIG=/boot/firmware/config.txt
 BEGIN="# >>> ystreamer"
 END="# <<< ystreamer"
 
+is_raspberry_pi() {
+    [ -r /proc/device-tree/model ] || return 1
+    tr -d '\000' < /proc/device-tree/model | grep -qi 'Raspberry Pi'
+}
+
 remove_boot_settings() {
+    is_raspberry_pi || return 0
     [ -f "$CONFIG" ] || return 0
     grep -qF "$BEGIN" "$CONFIG" || return 0
     sed -i "/^$BEGIN\$/,/^$END\$/d" "$CONFIG"
     rm -f "$CONFIG.before-ystreamer"
-    echo "YStreamer: restored $CONFIG; reboot to get the USB-C port back." >&2
+    echo "TMStreamer: restored $CONFIG; reboot required." >&2
 }
 
 case "$1" in
-remove)
-    remove_boot_settings
-    ;;
-purge)
-    remove_boot_settings
-    # Settings and the login; recordings in /var/lib/ystreamer stay
-    rm -rf /etc/ystreamer
-    ;;
+    remove)
+        remove_boot_settings
+        ;;
+    purge)
+        remove_boot_settings
+        rm -rf /etc/ystreamer
+        ;;
 esac
 
 #DEBHELPER#

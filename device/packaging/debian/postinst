@@ -1,13 +1,19 @@
+
 #!/bin/sh
 set -e
 
 CONFIG=/boot/firmware/config.txt
-# The list the package carries, or the repo's, for `mise run backend:boot-config`
 WANTED=${WANTED:-/usr/share/ystreamer/config.txt}
 BEGIN="# >>> ystreamer"
 END="# <<< ystreamer"
 
+is_raspberry_pi() {
+    [ -r /proc/device-tree/model ] || return 1
+    tr -d '\000' < /proc/device-tree/model | grep -qi 'Raspberry Pi'
+}
+
 add_boot_settings() {
+    is_raspberry_pi || return 0
     [ -f "$CONFIG" ] || return 0
     grep -qF "$BEGIN" "$CONFIG" && return 0
 
@@ -23,8 +29,8 @@ add_boot_settings() {
         echo "[all]"
         echo "$missing"
         echo "$END"
-    } >>"$CONFIG"
-    echo "YStreamer: changed $CONFIG; reboot for the goggles link to work." >&2
+    } >> "$CONFIG"
+    echo "TMStreamer: changed $CONFIG; reboot required." >&2
 }
 
 if [ "$1" = configure ]; then

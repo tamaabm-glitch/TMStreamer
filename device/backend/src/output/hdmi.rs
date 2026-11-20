@@ -2,7 +2,7 @@ use gstreamer as gst;
 use gstreamer::prelude::*;
 use gstreamer_app::AppSrc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::thread;
 use std::time::Duration;
 
@@ -11,16 +11,50 @@ use crate::input::h264::{self, AccessUnitAssembler};
 use crate::output::overlay::{self, Overlay, Rect};
 use crate::settings::{DisplaySettings, Scaling};
 
-// kmssink takes the decoder's YUV dmabufs straight onto a display plane. A
-// v4l2convert here turned every frame into 32-bit RGB first, which capped
-// HDMI at ~20 fps once the goggles went to 60 fps. vc4 is an atomic driver
-// whose commit already waits for vblank; without skip-vsync kmssink waited a
-// second time, 30 fps at most
-const PIPELINE: &str = "appsrc name=src is-live=true block=false max-bytes=2000000 format=time ! \
+// Keep the decoder platform-specific while preserving the same low-latency
+// queue and KMS output path on both Raspberry Pi and Rockchip boards.
+const PIPELINE_RASPBERRY_PI: &str = "appsrc name=src is-live=true block=false max-bytes=2000000 format=time ! \
     h264parse config-interval=-1 ! \
     v4l2h264dec ! \
     queue max-size-buffers=1 leaky=downstream ! \
     {crop}kmssink name=sink sync=false skip-vsync=true";
+
+const PIPELINE_ROCKCHIP: &str = "appsrc name=src is-live=true block=false max-bytes=2000000 format=time ! \
+    h264parse config-interval=-1 ! \
+    mppvideodec ! \
+    queue max-size-buffers=1 leaky=downstream ! \
+    {crop}kmssink name=sink sync=false skip-vsync=true";
+
+// Device-tree compatible strings are NUL-separated. Matching their textual
+// representation identifies the board without relying on IP or MAC addresses.
+fn is_rockchip() -> bool {
+    static DETECTED: OnceLock<bool> = OnceLock::new();
+
+    *DETECTED.get_or_init(|| {
+        std::fs::read("/proc/device-tree/compatible")
+            .map(|data| {
+                let compatible = String::from_utf8_lossy(&data).to_ascii_lowercase();
+                compatible.contains("rockchip,rk3568")
+                    || compatible.contains("radxa,rock3a")
+                    || compatible.contains("radxa,rock-3a")
+            })
+            .unwrap_or(false)
+    })
+}
+
+fn is_raspberry_pi() -> bool {
+    static DETECTED: OnceLock<bool> = OnceLock::new();
+
+    *DETECTED.get_or_init(|| {
+        std::fs::read("/proc/device-tree/model")
+            .map(|data| {
+                String::from_utf8_lossy(&data)
+                    .to_ascii_lowercase()
+                    .contains("raspberry pi")
+            })
+            .unwrap_or(false)
+    })
+}
 
 // DRM plane rotation bits
 const ROTATE_0: i32 = 0x1;
@@ -254,7 +288,11 @@ impl GstPlayer {
             return Ok(());
         };
 
-        patch_sps_level(&mut owned);
+        // Raspberry Pi 4's decoder needs the SPS level compatibility patch.
+        // Rockchip MPP handles the original stream and must not receive it.
+        if is_raspberry_pi() {
+            patch_sps_level(&mut owned);
+        }
         appsrc
             .push_buffer(gst::Buffer::from_mut_slice(owned))
             .map_err(|e| anyhow::anyhow!("push_buffer failed: {:?}", e))?;
@@ -312,7 +350,16 @@ fn build(cfg: &DisplaySettings, mode: &ModeInfo, fd: i32) -> Result<Running, Str
             mode.width, mode.height
         ),
     };
-    let pipeline = gst::parse::launch(&PIPELINE.replace("{crop}", &crop))
+    let (pipeline_template, decoder_name) = if is_rockchip() {
+        (PIPELINE_ROCKCHIP, "Rockchip MPP (mppvideodec)")
+    } else {
+        // Preserve the original V4L2 decoder path for Raspberry Pi and
+        // retain the previous default on other non-Rockchip systems.
+        (PIPELINE_RASPBERRY_PI, "V4L2 (v4l2h264dec)")
+    };
+    eprintln!("[hdmi] using {decoder_name}");
+
+    let pipeline = gst::parse::launch(&pipeline_template.replace("{crop}", &crop))
         .map_err(|e| format!("HDMI pipeline: {e}"))?
         .dynamic_cast::<gst::Pipeline>()
         .expect("Failed to cast to Pipeline");

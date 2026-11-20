@@ -1,4 +1,5 @@
-name: TMStreamer ARM64 Build
+
+name: TMStreamer Debian 12 ARM64 Build
 
 on:
   push:
@@ -10,44 +11,71 @@ permissions:
   contents: read
 
 concurrency:
-  group: tmstreamer-arm64-${{ github.ref }}
+  group: tmstreamer-debian12-arm64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Debian ARM64
+    name: Build Debian 12 ARM64
     runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout TMStreamer source
         uses: actions/checkout@v7
 
-      - name: Install GStreamer build dependencies
+      - name: Build inside Debian 12 ARM64
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            pkg-config \
-            libglib2.0-dev \
-            libgstreamer1.0-dev \
-            libgstreamer-plugins-base1.0-dev \
-            libgstrtspserver-1.0-dev
+          docker run --rm \
+            --mount type=bind,source="${GITHUB_WORKSPACE}",target=/workspace \
+            --workdir /workspace \
+            debian:12 \
+            bash -euxo pipefail -c '
+              export DEBIAN_FRONTEND=noninteractive
 
-      - name: Install Rust, Node.js and build tools
-        uses: jdx/mise-action@v5
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential \
+                ca-certificates \
+                curl \
+                pkg-config \
+                dpkg-dev \
+                libglib2.0-dev \
+                libgstreamer1.0-dev \
+                libgstreamer-plugins-base1.0-dev \
+                libgstrtspserver-1.0-dev \
+                libdrm-dev \
+                libudev-dev \
+                libusb-1.0-0-dev
 
-      - name: Install frontend dependencies
-        run: mise run frontend:install
+              curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+              apt-get install -y nodejs
+              npm install --global pnpm@12.4.2
 
-      - name: Build TMStreamer Debian package
-        run: mise run device:deb
+              curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
+                -y --profile minimal \
+                --default-toolchain 1.95.0 \
+                --component rustfmt,clippy
 
-      - name: Verify ARM64 package
+              export PATH="/root/.cargo/bin:$PATH"
+
+              cargo install cargo-deb --version 3.8.0 --locked
+
+              cd device/frontend
+              pnpm install --frozen-lockfile
+              pnpm build
+
+              cd ../backend
+              cargo deb
+            '
+
+      - name: Verify Debian ARM64 package
         shell: bash
         run: |
           set -euo pipefail
 
           DEB="$(find device/backend/target/debian \
-            -maxdepth 1 -type f -name '*.deb' -print -quit)"
+            -maxdepth 1 -type f -name "*.deb" -print -quit)"
 
           if [ -z "$DEB" ]; then
             echo "::error::Debian package was not generated."
@@ -57,23 +85,29 @@ jobs:
           ARCH="$(dpkg-deb -f "$DEB" Architecture)"
           PACKAGE="$(dpkg-deb -f "$DEB" Package)"
           VERSION="$(dpkg-deb -f "$DEB" Version)"
+          DEPENDS="$(dpkg-deb -f "$DEB" Depends)"
 
           echo "Package: $PACKAGE"
           echo "Version: $VERSION"
           echo "Architecture: $ARCH"
-          echo "File: $DEB"
+          echo "Dependencies: $DEPENDS"
 
           if [ "$ARCH" != "arm64" ]; then
-            echo "::error::Expected ARM64 package, got $ARCH"
+            echo "::error::Expected ARM64 package."
+            exit 1
+          fi
+
+          if echo "$DEPENDS" | grep -q "libglib2.0-0t64"; then
+            echo "::error::Incompatible t64 dependency detected."
             exit 1
           fi
 
           dpkg-deb --contents "$DEB"
 
-      - name: Upload TMStreamer ARM64 package
+      - name: Upload TMStreamer Debian 12 ARM64
         uses: actions/upload-artifact@v4
         with:
-          name: TMStreamer-ARM64-Debian
+          name: TMStreamer-Debian12-ARM64
           path: device/backend/target/debian/*.deb
           if-no-files-found: error
           retention-days: 14

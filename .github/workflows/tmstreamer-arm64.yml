@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - tmstreamer
+      - tm-lic-v1.2-integration
   workflow_dispatch:
 
 permissions:

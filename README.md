@@ -1,186 +1,75 @@
 <div align="center">
 
-<img src="device/frontend/public/logo.svg" alt="YStreamer" width="96" height="96" />
+<img src="device/frontend/public/logo.svg" alt="TMStreamer" width="96" height="96" />
 
-# YStreamer
+# TMStreamer
 
-**Your FPV feed, on every screen.**
+**NEW GALIH MULTIMEDIA — Your FPV feed, on every screen.**
 
-Raspberry Pi 4 software that takes the live video from your DJI goggles or a USB
-camera and sends it to an HDMI screen, any browser, RTSP/SRT/RTMP/UDP streams
-and recordings - all at once, set up from a web interface.
+TMStreamer is a rebranded and modified distribution of the upstream YStreamer software. It is intended to receive DJI goggles video or USB camera input and send it to HDMI, browsers, network streams and recordings.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-2563eb.svg?style=flat-square)](LICENSE)
-[![Raspberry Pi 4](https://img.shields.io/badge/Raspberry%20Pi-4%20Model%20B-c51a4a?style=flat-square&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
-[![Built with Rust](https://img.shields.io/badge/built%20with-Rust-b7410e?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org)
-[![GStreamer](https://img.shields.io/badge/video-GStreamer-3d8bff?style=flat-square)](https://gstreamer.freedesktop.org)
+[![ARM64](https://img.shields.io/badge/Target-ARM64-blue?style=flat-square)](https://github.com/tamaabm-glitch/TMStreamer/actions)
 
-[**⬇️ Download**](https://ystreamer.yarosfpv.com/download) &nbsp;·&nbsp;
-[**📖 Documentation**](https://ystreamer.yarosfpv.com/docs) &nbsp;·&nbsp;
-[**🌐 Website**](https://ystreamer.yarosfpv.com)
+[Releases](https://github.com/tamaabm-glitch/TMStreamer/releases) · [Source](https://github.com/tamaabm-glitch/TMStreamer)
 
 </div>
 
 ---
 
-## What it does
+## Project status
 
-Plug your goggles into a Raspberry Pi 4 and everyone else gets to see what you
-see. One USB-C cable in, and every output at the same time:
+This repository contains an in-progress TMStreamer rebrand and integration branch. The upstream software's documented, tested device is Raspberry Pi 4. Radxa ROCK 3A support is a target under evaluation, not yet certified. An ARM64 build alone does not prove hardware compatibility.
 
-- **HDMI** - the feed on a TV, monitor or projector, with your logo on top.
-- **Any browser** - live view on phones and laptops, over WebRTC or WebSocket.
-- **Streams** - an RTSP server, plus SRT, RTMP (YouTube, Twitch, Facebook) and
-  UDP for OBS, VLC, QGroundControl and Mission Planner.
-- **Recording** - MP4 or MPEG-TS to the SD card or a USB drive, started by hand,
-  automatically when video arrives, or with a physical button.
+## Capabilities inherited from upstream
 
-It also changes the **air unit's camera settings** from the browser, shows the
-**goggles' battery and link quality**, offers **remote access** through
-Tailscale or WireGuard, and **updates itself** with signed releases that roll
-back if a new version doesn't start.
+- DJI goggles USB video ingest using the DUML protocol, plus legacy and UVC input paths.
+- HDMI display output through GStreamer.
+- Browser viewing and RTSP, SRT, RTMP and UDP outputs.
+- Video recording and device status/camera telemetry features.
 
-Everything is set up from the web interface at `http://ystreamer.local`. No
-terminal needed.
+Availability depends on the connected DJI device, kernel, USB gadget configuration and installed GStreamer plugins.
 
-## See it in action
+## Safety and compatibility principles
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="site/public/images/docs/ystreamer-ui/dark/watch-page.webp" />
-        <img src="site/public/images/docs/ystreamer-ui/light/watch-page.webp" alt="The Watch page with live video and the camera settings" width="100%" />
-      </picture>
-      <br /><sub><b>Live view and camera settings</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="site/public/images/docs/ystreamer-ui/default-splash.webp" alt="The HDMI splash screen" width="100%" />
-      <br /><sub><b>On HDMI, before the goggles connect</b></sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="site/public/images/docs/ystreamer-ui/dark/recordings-card.webp" />
-        <img src="site/public/images/docs/ystreamer-ui/light/recordings-card.webp" alt="Recordings on the device" width="100%" />
-      </picture>
-      <br /><sub><b>Recordings</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="site/public/images/docs/other-software/obs.webp" alt="The feed in OBS over SRT" width="100%" />
-      <br /><sub><b>Into OBS over SRT</b></sub>
-    </td>
-  </tr>
-</table>
+- Preserve DJI DUML parsing, USB handling, camera control, GStreamer pipelines, streaming, HDMI and recording unless a change is separately tested.
+- Keep Linux service/package identifiers such as ystreamer unchanged during visual rebranding; renaming them can break upgrades, settings and service management.
+- Never fabricate or reuse upstream signing keys, user credentials, activation secrets or TM-LIC private keys.
+- Keep TM-LIC activation and validation independent from upstream licensing.
+- Test on Radxa ROCK 3A hardware before declaring an installer ready.
+- Back up settings and recordings before any on-device upgrade.
 
-## Supported inputs
+## Building
 
-| Source                                        | Port  | Video | Camera settings | Battery & link |
-| --------------------------------------------- | :---: | :---: | :-------------: | :------------: |
-| DJI Goggles 2, Integra, Goggles 3, Goggles N3 | USB-C |  ✅   |       ✅        |       ✅       |
-| DJI FPV Goggles V1 / V2 _(experimental)_      | USB-A |  ✅   |       ❌        |       ❌       |
-| USB cameras, capture sticks, analog receivers | USB-A |  ✅   |        -        |       -        |
-
-_Which camera settings can be changed depends on the air unit (O3, O4, O4 Pro)._
-
-> [!NOTE]
-> YStreamer is an independent project. It is not affiliated with, endorsed by
-> or sponsored by DJI.
-
-## What you need
-
-- **Raspberry Pi 4 Model B** - the only board YStreamer is tested on.
-- **A microSD card**, 16 GB or more.
-- **Power through the GPIO header or a PoE HAT** - the USB-C port is reserved
-  for the goggles while YStreamer is installed.
-- **A USB-C to USB-C data cable** for the goggles, or a USB camera.
-
-Wi-Fi runs on 2.4 GHz only, on purpose: 5 GHz is where the goggles' video link
-lives. See [What you need](https://ystreamer.yarosfpv.com/docs/getting-started/requirements)
-for the details.
-
-## Getting started
-
-**On a blank SD card (recommended):**
-
-1. [Download the image](https://ystreamer.yarosfpv.com/download/ystreamer.img.xz)
-   from the latest release.
-2. Flash it with Raspberry Pi Imager ("Use custom") or balenaEtcher.
-3. Boot the Pi, join the `YStreamer` Wi-Fi network (password `ystreamer`) and
-   open `http://10.0.0.1`. An HDMI screen shows the details and a QR code too.
-
-**On Raspberry Pi OS Lite (64-bit, Trixie)** that's already set up:
+The project uses mise to install Rust, Node and pnpm toolchains.
 
 ```sh
-curl -fsSL https://ystreamer.yarosfpv.com/install.sh | sudo sh
-```
-
-The script checks the device, shows what it will change and asks before
-installing.
-
-See the [full documentation](https://ystreamer.yarosfpv.com/docs) for the first
-boot, every output, guides for OBS, VLC and ground stations, and common issues.
-
-## Building from source
-
-Tasks run through [mise](https://mise.jdx.dev), which also installs the
-toolchains (Rust, Node, pnpm):
-
-```sh
-# The web interface and the backend, for development
-mise run frontend:dev
-mise run backend:run        # as root: the hardware and port 80 need it
-
-# Checks
-mise run lint
+mise run frontend:install
+mise run frontend:build
+mise run backend:deps
 mise run backend:test
-
-# What ships
-mise run device:package     # build and sign the .deb
-mise run image:full         # .deb plus the SD card image (needs Docker)
+mise run backend:lint
+mise run device:package
 ```
 
-On Debian or Raspberry Pi OS, `mise run backend:deps` installs the GStreamer
-headers the backend builds against. `mise tasks` lists everything else.
-
-Planning to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev setup
-and how to submit changes.
+See mise.toml for the full task list. The Debian package build requires the GStreamer development headers and other dependencies listed by the project.
 
 ## Repository layout
 
-| Path                | What's inside                                                       |
-| ------------------- | ------------------------------------------------------------------- |
-| `device/backend/`   | The YStreamer service (Rust, GStreamer): video, outputs, web server |
-| `device/frontend/`  | The web interface (Svelte), compiled into the backend               |
-| `device/packaging/` | The Debian package, install script and update signing               |
-| `image/`            | The ready-made SD card image (pi-gen)                               |
-| `site/`             | The website and documentation (Astro)                               |
+| Path | Contents |
+| --- | --- |
+| device/backend/ | Rust service, DJI input, GStreamer and web API |
+| device/frontend/ | Svelte web dashboard and visual assets |
+| device/packaging/ | Debian packaging, service unit and install scripts |
+| image/ | Upstream Raspberry Pi image build |
+| site/ | Documentation website |
 
-## Acknowledgements
+## Upstream origin and attribution
 
-**Inspiration**
+TMStreamer is based on YStreamer. The upstream project and its authors retain their applicable copyrights and notices. This repository's modifications do not imply endorsement by upstream authors or DJI.
 
-- [**CosmoStreamer**](https://cosmostreamer.com): the commercial streaming box that inspired YStreamer.
-- [**SquirrelCast**](https://xnuclearsquirrel.github.io/SquirrelCast-Public): a paid Android app that does something similar, and the push to start this project.
-
-**DJI protocol documentation**
-
-- [**samuelsadok/dji_protocol**](https://github.com/samuelsadok/dji_protocol): documentation of the DJI DUML protocol.
-- [**wllm-rbnt/third-eye**](https://github.com/wllm-rbnt/third-eye): detailed documentation of the Goggles 3 USB link.
-
-**Built with**
-
-- [**GStreamer**](https://gstreamer.freedesktop.org) and its [Rust bindings](https://gitlab.freedesktop.org/gstreamer/gstreamer-rs): all of the video handling.
-- [**webrtc-rs**](https://github.com/webrtc-rs/webrtc): the low-latency browser view.
-- [**Tokio**](https://tokio.rs) and [**Axum**](https://github.com/tokio-rs/axum): the web server.
-- [**Svelte**](https://svelte.dev), [**Tailwind CSS**](https://tailwindcss.com) and [**Lucide**](https://lucide.dev): the web interface.
-- [**xterm.js**](https://xtermjs.org): the in-browser terminal.
-- [**pi-gen**](https://github.com/RPi-Distro/pi-gen): building the SD card image on Raspberry Pi OS.
+The upstream README acknowledges CosmoStreamer as inspiration and documents DJI protocol research sources. These acknowledgements are retained as project provenance; TMStreamer does not claim ownership of those projects or protocols.
 
 ## License
 
-YStreamer is free software, licensed under the **GNU General Public License
-v3.0**. See [`LICENSE`](LICENSE) for the full text.
-
-Copyright © 2026 YarosFPV
+The upstream code is distributed under GNU GPL version 3.0 (GPL-3.0-only), as indicated by package metadata and the accompanying LICENSE. Modified distributions must continue to meet applicable GPL source, notice and license requirements. Preserve all applicable copyright notices.

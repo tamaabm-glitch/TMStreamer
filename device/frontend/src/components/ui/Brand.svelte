@@ -4,7 +4,7 @@
 
 <div class="flex items-center">
   <img
-    src="/logo.png"
+    src="/logo.svg"
     alt="TMStreamer - NEW GALIH MULTIMEDIA"
     class={small
       ? "h-7 w-auto max-w-full object-contain"

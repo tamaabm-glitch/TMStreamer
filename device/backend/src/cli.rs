@@ -12,9 +12,9 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const HELP: &str = "\
 Usage: ystreamer <command>
 
-  status             Whether YStreamer is running and where to open it
-  restart            Restart YStreamer
-  logs [-f]          Show what YStreamer has logged; -f keeps following
+  status             Whether TMStreamer is running and where to open it
+  restart            Restart TMStreamer
+  logs [-f]          Show what TMStreamer has logged; -f keeps following
   password           Set the web interface's password
   password --clear   Remove the web interface's password
   reset [--yes]      Put all settings and the password back to the defaults
@@ -22,7 +22,7 @@ Usage: ystreamer <command>
   help               Show this
 
 restart, password and reset need sudo.
-`ystreamer run` is YStreamer itself, which the system service starts.";
+`ystreamer run` is the TMStreamer service process.";
 
 #[derive(Debug, PartialEq)]
 pub enum Command {
@@ -136,7 +136,7 @@ fn systemctl(action: &str) -> Result<(), String> {
 }
 
 fn status() {
-    println!("YStreamer {VERSION}");
+    println!("TMStreamer - NEW GALIH MULTIMEDIA {VERSION}");
     let running = running_version();
     match (&running, service_active()) {
         (Some(version), _) if version != VERSION => {
@@ -234,7 +234,7 @@ fn password(clear: bool) -> Result<(), String> {
 
     // The running service only reads the login when told to
     if service_active() && systemctl("reload").is_err() {
-        println!("Saved. Restart YStreamer for it to take effect: sudo ystreamer restart");
+        println!("Saved. Restart TMStreamer for it to take effect: sudo ystreamer restart");
     } else if clear {
         println!("The web interface no longer asks for a password.");
     } else {

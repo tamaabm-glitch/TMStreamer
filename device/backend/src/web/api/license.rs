@@ -16,9 +16,9 @@ pub(super) async fn activate(
     State(services): State<Services>,
     body: Bytes,
 ) -> Result<Json<LicenseStatus>, ApiError> {
-    services.license.activate(&body)
-        .map(Json)
-        .map_err(bad)
+    let status = services.license.activate(&body).map_err(bad)?;
+    services.apply_entitlements();
+    Ok(Json(status))
 }
 
 use axum::{

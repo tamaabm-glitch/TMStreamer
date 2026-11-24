@@ -67,7 +67,11 @@ pub fn start(
         rt.block_on(async move {
             let api = Arc::new(rtc::build_api().expect("Failed to build webrtc API"));
             let (au_tx, _keep) = broadcast::channel::<AccessUnit>(1024);
-            tokio::spawn(rtc::assemble_loop(chunk_rx, au_tx.clone()));
+            tokio::spawn(rtc::assemble_loop(
+                chunk_rx,
+                au_tx.clone(),
+                Arc::clone(&services.streaming_enabled),
+            ));
 
             // Broadcast of camera-state JSON to all /control clients
             let (control_tx, _control_keep) = broadcast::channel::<String>(64);

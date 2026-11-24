@@ -1,4 +1,3 @@
-
 name: TMStreamer Debian 12 ARM64 Build
 
 on:
@@ -6,6 +5,7 @@ on:
     branches:
       - tmstreamer
       - tm-lic-v1.2-integration
+      - tm-lic-v1.3-implementation
   workflow_dispatch:
 
 permissions:
@@ -67,7 +67,8 @@ jobs:
               pnpm build
 
               cd ../backend
-              cargo deb
+              cargo test --locked
+              cargo deb --locked
             '
 
       - name: Verify Debian ARM64 package

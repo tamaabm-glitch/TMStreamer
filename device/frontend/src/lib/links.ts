@@ -1,5 +1,5 @@
-export const WEBSITE = "https://ystreamer.yarosfpv.com";
-export const SOURCE = "https://github.com/YLabs-FPV/YStreamer";
+export const WEBSITE = "https://github.com/tamaabm-glitch/TMStreamer/releases";
+export const SOURCE = "https://github.com/tamaabm-glitch/TMStreamer";
 export const NEW_ISSUE = `${SOURCE}/issues/new/choose`;
 
 export interface BugReportFields {

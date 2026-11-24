@@ -6,7 +6,7 @@ impl Folder {
     fn with(files: &[&str]) -> Self {
         static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let n = NEXT.fetch_add(1, Ordering::Relaxed);
-        let dir = std::env::temp_dir().join(format!("ystreamer-rec-{}-{n}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tmstreamer-rec-{}-{n}", std::process::id()));
         fs::create_dir_all(dir.join("inner")).unwrap();
         for f in files {
             fs::write(dir.join(f), b"x").unwrap();
@@ -75,12 +75,12 @@ fn finds_the_filesystem_a_folder_is_on() {
     let on =
         |p: &str| mount_of(Path::new(p), &mounts).map(|m| (m.device.as_str(), m.fstype.as_str()));
     assert_eq!(
-        on("/media/root/USB DISK/ystreamer"),
+        on("/media/root/USB DISK/tmstreamer"),
         Some(("/dev/sda1", "vfat"))
     );
     assert_eq!(on("/mnt/ssd/clips/today"), Some(("/dev/sdb1", "exfat")));
     assert_eq!(
-        on("/var/lib/ystreamer/recordings"),
+        on("/var/lib/tmstreamer/recordings"),
         Some(("/dev/mmcblk0p2", "ext4"))
     );
     // a longer name is another folder, not this mount
@@ -91,15 +91,15 @@ fn finds_the_filesystem_a_folder_is_on() {
 fn knows_when_the_drive_is_gone() {
     let mounts = parse_mounts(MOUNTS);
     let missing = |p: &str| drive_missing(Path::new(p), &mounts);
-    assert!(!missing("/media/root/USB DISK/ystreamer"));
+    assert!(!missing("/media/root/USB DISK/tmstreamer"));
     assert!(!missing("/mnt/ssd/clips"));
-    assert!(!missing("/var/lib/ystreamer/recordings"));
+    assert!(!missing("/var/lib/tmstreamer/recordings"));
     assert!(!missing("/home/pi/clips"));
     // would land on the system card
-    assert!(missing("/media/root/OTHER STICK/ystreamer"));
+    assert!(missing("/media/root/OTHER STICK/tmstreamer"));
     assert!(missing("/mnt/gone"));
     assert!(drive_missing(
-        Path::new("/media/root/USB DISK/ystreamer"),
+        Path::new("/media/root/USB DISK/tmstreamer"),
         &[]
     ));
 }

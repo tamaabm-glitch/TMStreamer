@@ -5,13 +5,16 @@
   import { btn } from "@/components/ui/buttons";
   import Switch from "@/components/ui/Switch.svelte";
 
-  const REFRESH_KEY = "ystreamer.logs.refresh";
+  const REFRESH_KEY = "tmstreamer.logs.refresh";
+  const LEGACY_REFRESH_KEY = "ystreamer.logs.refresh";
   const REFRESH_MS = 1000;
   const BOTTOM_SLACK_PX = 4;
 
   function savedRefresh(): boolean {
     try {
-      return localStorage.getItem(REFRESH_KEY) !== "0";
+      const saved = localStorage.getItem(REFRESH_KEY) ?? localStorage.getItem(LEGACY_REFRESH_KEY);
+      if (saved !== null) localStorage.setItem(REFRESH_KEY, saved);
+      return saved !== "0";
     } catch {
       return true;
     }
@@ -55,6 +58,7 @@
     try {
       if (on) localStorage.removeItem(REFRESH_KEY);
       else localStorage.setItem(REFRESH_KEY, "0");
+      localStorage.removeItem(LEGACY_REFRESH_KEY);
     } catch {}
 
     if (on) load(true);

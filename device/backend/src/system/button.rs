@@ -89,7 +89,7 @@ impl RecordButton {
     fn watch(&self, cfg: &ButtonSettings, unchanged: &dyn Fn() -> bool) -> Result<(), String> {
         let button = Request::builder()
             .on_chip(CHIP)
-            .with_consumer("ystreamer-record")
+            .with_consumer("tmstreamer-record")
             .with_line(cfg.pin as u32)
             .as_input()
             .with_bias(Bias::PullUp)
@@ -101,7 +101,7 @@ impl RecordButton {
             Some(pin) => Some((
                 Request::builder()
                     .on_chip(CHIP)
-                    .with_consumer("ystreamer-record-led")
+                    .with_consumer("tmstreamer-record-led")
                     .with_line(pin as u32)
                     .as_output(Value::Inactive)
                     .request()

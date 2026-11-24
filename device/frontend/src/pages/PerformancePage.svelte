@@ -25,7 +25,7 @@
 
   function readRange() {
     try {
-      const v = Number(localStorage.getItem("ystreamer.perf.range"));
+      const v = Number(localStorage.getItem("tmstreamer.perf.range") ?? localStorage.getItem("ystreamer.perf.range"));
       return RANGES.some((r) => r.value === v) ? v : 300;
     } catch {
       return 300;
@@ -36,7 +36,8 @@
     windowSecs = v;
 
     try {
-      localStorage.setItem("ystreamer.perf.range", String(v));
+      localStorage.setItem("tmstreamer.perf.range", String(v));
+      localStorage.removeItem("ystreamer.perf.range");
     } catch {}
   }
 

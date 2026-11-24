@@ -524,16 +524,30 @@ pub fn storage(dir: &Path) -> Storage {
 /// mounted under /media or /mnt (USB sticks, typically)
 pub fn storage_options(current: &Path) -> Vec<StorageOption> {
     let mut options = vec![StorageOption {
-        path: "/var/lib/ystreamer/recordings".into(),
+        path: "/var/lib/tmstreamer/recordings".into(),
         label: "SD card".into(),
-        // On the image the recordings have a partition of their own
-        free_bytes: disk_usage(Path::new("/var/lib/ystreamer"))
+        free_bytes: disk_usage(Path::new("/var/lib/tmstreamer"))
             .or_else(|| disk_usage(Path::new("/")))
             .map(|(_, f)| f)
             .unwrap_or(0),
         removable: false,
         missing: false,
     }];
+
+    // Older recordings remain selectable; never move or delete them implicitly.
+    let legacy_internal = Path::new("/var/lib/ystreamer/recordings");
+    if legacy_internal.is_dir() {
+        options.push(StorageOption {
+            path: legacy_internal.display().to_string(),
+            label: "Legacy recordings".into(),
+            free_bytes: disk_usage(Path::new("/var/lib/ystreamer"))
+                .or_else(|| disk_usage(Path::new("/")))
+                .map(|(_, f)| f)
+                .unwrap_or(0),
+            removable: false,
+            missing: false,
+        });
+    }
 
     let mounts = mounts();
     for m in &mounts {
@@ -543,10 +557,20 @@ pub fn storage_options(current: &Path) -> Vec<StorageOption> {
         options.push(StorageOption {
             label: drive_label(&m.point),
             free_bytes: disk_usage(&m.point).map(|(_, f)| f).unwrap_or(0),
-            path: m.point.join("ystreamer").display().to_string(),
+            path: m.point.join("tmstreamer").display().to_string(),
             removable: true,
             missing: false,
         });
+        let legacy = m.point.join("ystreamer");
+        if legacy.is_dir() {
+            options.push(StorageOption {
+                label: format!("{} (legacy)", drive_label(&m.point)),
+                free_bytes: disk_usage(&m.point).map(|(_, f)| f).unwrap_or(0),
+                path: legacy.display().to_string(),
+                removable: true,
+                missing: false,
+            });
+        }
     }
 
     // Keep whatever is configured selectable, even somewhere custom
@@ -632,7 +656,7 @@ fn sanitize(prefix: &str) -> String {
         .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
         .collect();
     if cleaned.is_empty() {
-        "ystreamer".into()
+        "tmstreamer".into()
     } else {
         cleaned
     }

@@ -1,13 +1,16 @@
 import { snackbar } from "@/stores/snackbar.svelte";
 
-const KEY = "ystreamer.developer";
+const KEY = "tmstreamer.developer";
+const LEGACY_KEY = "ystreamer.developer";
 const TAPS = 7;
 const HINT_FROM = 3;
 const TAP_GAP_MS = 1500;
 
 function load(): boolean {
   try {
-    return localStorage.getItem(KEY) === "1";
+    const saved = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
+    if (saved !== null) localStorage.setItem(KEY, saved);
+    return saved === "1";
   } catch {
     return false;
   }
@@ -17,6 +20,7 @@ function save(on: boolean) {
   try {
     if (on) localStorage.setItem(KEY, "1");
     else localStorage.removeItem(KEY);
+    localStorage.removeItem(LEGACY_KEY);
   } catch {}
 }
 

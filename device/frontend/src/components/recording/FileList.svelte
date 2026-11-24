@@ -30,12 +30,15 @@
   } = $props();
 
   type View = "grid" | "list";
-  const VIEW_KEY = "ystreamer.files.view";
+  const VIEW_KEY = "tmstreamer.files.view";
+  const LEGACY_VIEW_KEY = "ystreamer.files.view";
   const STEP: Record<View, number> = { grid: 12, list: 30 };
 
   function restoreView(): View {
     try {
-      return localStorage.getItem(VIEW_KEY) === "list" ? "list" : "grid";
+      const saved = localStorage.getItem(VIEW_KEY) ?? localStorage.getItem(LEGACY_VIEW_KEY);
+      if (saved !== null) localStorage.setItem(VIEW_KEY, saved);
+      return saved === "list" ? "list" : "grid";
     } catch {
       return "grid";
     }
@@ -50,6 +53,7 @@
     shown = STEP[v];
     try {
       localStorage.setItem(VIEW_KEY, v);
+      localStorage.removeItem(LEGACY_VIEW_KEY);
     } catch {}
   }
 

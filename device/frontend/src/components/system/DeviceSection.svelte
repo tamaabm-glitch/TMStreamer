@@ -304,7 +304,7 @@
           {#if power}
             {@render row("Power", power.text, power.bad)}
           {/if}
-          {@render link("Website", WEBSITE)}
+          {@render link("Releases", WEBSITE)}
           {@render link("Source code", SOURCE)}
           <div
             class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-t border-line px-4 py-2.5"

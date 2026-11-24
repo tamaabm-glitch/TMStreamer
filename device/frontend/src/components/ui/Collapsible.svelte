@@ -22,12 +22,14 @@
     children,
   }: Props = $props();
 
-  const key = $derived(id ? `ystreamer.panel.${id}` : null);
+  const key = $derived(id ? `tmstreamer.panel.${id}` : null);
+  const legacyKey = $derived(id ? `ystreamer.panel.${id}` : null);
 
   function restore(): boolean {
     if (!key) return initial;
     try {
-      const v = localStorage.getItem(key);
+      const v = localStorage.getItem(key) ?? (legacyKey ? localStorage.getItem(legacyKey) : null);
+      if (v !== null) localStorage.setItem(key, v);
       return v === null ? initial : v === "1";
     } catch {
       return initial;
@@ -41,6 +43,7 @@
     if (!key) return;
     try {
       localStorage.setItem(key, open ? "1" : "0");
+      if (legacyKey) localStorage.removeItem(legacyKey);
     } catch {}
   }
 </script>

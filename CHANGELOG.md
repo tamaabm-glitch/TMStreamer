@@ -1,13 +1,5 @@
 # Changelog
 
-## 0.1.4
-
-- Add experimental DJI RC-N2 / RC-N3 direct USB video input through FunctionFS Android Accessory mode.
-- Add queued USB reads, DUML generation reset, H.265 detection and automatic keyframe requests.
-- Prefer Rockchip MPP H.265 decode / H.264 encode on Radxa RK3568; retain FFmpeg fallback.
-- Use Rockchip MPP for USB capture encoding when available.
-- Expose DJI codec and converter status in the dashboard.
-
 ## 0.1.3
 
 - Rename the installed executable and systemd service to TMStreamer.

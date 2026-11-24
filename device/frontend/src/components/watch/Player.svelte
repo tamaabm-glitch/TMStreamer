@@ -66,12 +66,13 @@
   let aspect = $state(16 / 9);
   let isPip = $state(false);
   const canPip = !!document.pictureInPictureEnabled;
-  showStats = readPref("ystreamer.hud", false);
-  theater = readPref("ystreamer.theater", false);
+  showStats = readPref("tmstreamer.hud", "ystreamer.hud", false);
+  theater = readPref("tmstreamer.theater", "ystreamer.theater", false);
 
-  function readPref(key: string, fallback: boolean) {
+  function readPref(key: string, legacyKey: string, fallback: boolean) {
     try {
-      const v = localStorage.getItem(key);
+      const v = localStorage.getItem(key) ?? localStorage.getItem(legacyKey);
+      if (v !== null) localStorage.setItem(key, v);
       return v === null ? fallback : v === "1";
     } catch {
       return fallback;
@@ -86,13 +87,13 @@
 
   export function toggleStats() {
     showStats = !showStats;
-    savePref("ystreamer.hud", showStats);
+    savePref("tmstreamer.hud", showStats);
   }
 
   export function toggleTheater() {
     const flip = () => {
       theater = !theater;
-      savePref("ystreamer.theater", theater);
+      savePref("tmstreamer.theater", theater);
       flushSync();
     };
     if (document.startViewTransition) document.startViewTransition(flip);

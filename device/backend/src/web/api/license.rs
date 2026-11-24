@@ -59,7 +59,7 @@ fn required_features(path: &str, method: &axum::http::Method) -> &'static [&'sta
 
     if path.starts_with("/recording") || recording_settings {
         &["recording"]
-    } else if streaming_settings || matches!(path, "/offer" | "/video" | "/control") {
+    } else if streaming_settings || matches!(path, "/offer" | "/video") {
         &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
         &["recording", "streaming"]
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn gates_all_streaming_websocket_routes() {
-        for path in ["/offer", "/video", "/control"] {
+        for path in ["/offer", "/video"] {
             assert_eq!(required_features(path, &Method::GET), &["streaming"]);
         }
     }
@@ -133,6 +133,11 @@ mod tests {
         for path in ["/auth", "/license", "/network", "/input", "/display", "/system", "/system/logs"] {
             assert!(required_features(path, &Method::GET).is_empty(), "{path}");
         }
+    }
+
+    #[test]
+    fn keeps_dji_control_and_telemetry_channel_available() {
+        assert!(required_features("/control", &Method::GET).is_empty());
     }
 
     #[test]

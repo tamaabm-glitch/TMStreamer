@@ -44,22 +44,22 @@ pub(super) async fn enforce(
     let path = path.strip_prefix("/api").unwrap_or(path);
     let method = request.method();
 
-    let required_feature = if path.starts_with("/recording") {
-        Some("recording")
+    let required_features: &[&str] = if path.starts_with("/recording") {
+        &["recording"]
     } else if path == "/settings/recording" && *method == axum::http::Method::PUT {
-        Some("recording")
+        &["recording"]
     } else if matches!(path,
         "/settings/rtsp" | "/settings/srt" | "/settings/rtmp"
         | "/settings/udp" | "/settings/viewer"
     ) && *method == axum::http::Method::PUT {
-        Some("streaming")
+        &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
-        Some("streaming")
+        &["recording", "streaming"]
     } else {
-        None
+        &[]
     };
 
-    if let Some(feature) = required_feature {
+    for feature in required_features {
         if !license.has_feature(feature) {
             let (message, code) = if license.status().licensed {
                 ("Fitur ini tidak termasuk dalam lisensi aktif", "feature_not_licensed")

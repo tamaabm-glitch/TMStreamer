@@ -64,6 +64,7 @@ jobs:
 
               cd device/frontend
               pnpm install --frozen-lockfile
+              pnpm check
               pnpm build
 
               cd ../backend

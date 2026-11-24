@@ -52,9 +52,7 @@ fn run() -> anyhow::Result<()> {
         cfg.udp.enabled = false;
     }
     if !web::api::license::feature_enabled("recording") {
-        eprintln!("[license] recording is locked; DVR auto-start and GPIO button remain disabled");
-        cfg.recording.auto_start = false;
-        cfg.recording.button.enabled = false;
+        eprintln!("[license] recording is locked; Recorder enforces entitlement on every start");
     }
 
     // Outputs first, so the web server can reconfigure them from settings

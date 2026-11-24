@@ -174,6 +174,11 @@ impl Recorder {
             // Nothing recording: pick up auto-start on the first keyframe
             drop(guard);
             if self.auto_start_pending.load(Ordering::Relaxed) && has_keyframe(data) {
+                // Keep auto-start pending while unlicensed so activating a
+                // valid entitlement later does not require a service restart.
+                if !crate::web::api::license::feature_enabled("recording") {
+                    return;
+                }
                 self.auto_start_pending.store(false, Ordering::Relaxed);
                 if let Err(e) = self.start_session(true) {
                     eprintln!("[rec] auto-start failed: {e}");

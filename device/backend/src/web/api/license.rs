@@ -1,7 +1,7 @@
 use axum::{
     Json,
     body::Bytes,
-    extract::Request,
+    extract::{Request, State},
     http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
@@ -181,7 +181,10 @@ pub async fn recording_only(req: Request, next: Next) -> Response {
 
 /// Accepts only a signed, machine-bound TM-LIC license document. The verifier
 /// validates the temporary file before it can replace the installed license.
-pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
+pub async fn activate(
+    State(services): State<super::Services>,
+    body: Bytes,
+) -> Result<Json<LicenseStatus>, Response> {
     if body.is_empty() || body.len() > 64 * 1024 {
         return Err((StatusCode::BAD_REQUEST, "License file must be between 1 byte and 64 KiB").into_response());
     }
@@ -221,6 +224,27 @@ pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
             let _ = directory.sync_all();
         }
         invalidate_feature_cache();
+
+        // The service may have started while this device was unlicensed, in
+        // which case paid output transports were deliberately left stopped.
+        // Re-apply only the entitlements present in the newly verified file.
+        let cfg = services.store.get();
+        if verified.allows("streaming") {
+            if let Err(error) = services.rtsp.apply(&cfg.rtsp) {
+                eprintln!("[license] RTSP could not be enabled after activation: {error}");
+            }
+            if let Err(error) = services.srt.apply(&cfg.srt) {
+                eprintln!("[license] SRT could not be enabled after activation: {error}");
+            }
+            services.rtmp.apply(&cfg.rtmp);
+            if let Err(error) = services.udp.apply(&cfg.udp) {
+                eprintln!("[license] UDP could not be enabled after activation: {error}");
+            }
+        }
+        if verified.allows("recording") {
+            services.recorder.configure(&cfg.recording);
+            services.button.configure(&cfg.recording.button);
+        }
         Ok(verified)
     }).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("TM-LIC activation failed: {e}")).into_response())?;
 

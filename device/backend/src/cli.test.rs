@@ -58,3 +58,10 @@ fn lists_addresses_people_can_reach() {
     assert_eq!(reachable_address(bridge), None);
     assert_eq!(reachable_address(""), None);
 }
+
+#[test]
+fn help_uses_tmstreamer_executable_name() {
+    assert!(HELP.contains("Usage: tmstreamer <command>"));
+    assert!(HELP.contains("`tmstreamer run`"));
+    assert!(!HELP.contains("ystreamer"));
+}

@@ -33,3 +33,16 @@ fn adds_the_local_line_when_there_is_none() {
     );
     assert_eq!(with_local_name("", "pi"), "127.0.1.1 pi\n");
 }
+
+#[test]
+fn prefers_tmstreamer_service_and_keeps_legacy_override() {
+    assert_eq!(configured_unit(None, None), "tmstreamer.service");
+    assert_eq!(
+        configured_unit(Some("custom.service".into()), Some("old.service".into())),
+        "custom.service"
+    );
+    assert_eq!(
+        configured_unit(None, Some("ystreamer.service".into())),
+        "ystreamer.service"
+    );
+}

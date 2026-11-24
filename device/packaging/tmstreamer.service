@@ -5,8 +5,8 @@ Wants=NetworkManager.service
 StartLimitIntervalSec=0
 
 [Service]
-ExecStart=/usr/bin/ystreamer run
-# Re-reads the login, after `ystreamer password`
+ExecStart=/usr/bin/tmstreamer run
+# Re-reads the login, after `tmstreamer password`
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=2

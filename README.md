@@ -34,7 +34,7 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 
 - Preserve DJI DUML parsing, USB handling, camera control, GStreamer pipelines, streaming, HDMI and recording unless a change is separately tested.
 - Debian package identity is `tmstreamer`; the systemd unit is `tmstreamer.service`.
-- The executable remains `/usr/bin/ystreamer` for compatibility with the existing upstream CLI and runtime layout. Existing settings and state directories under `/etc/ystreamer` and `/var/lib/ystreamer` are intentionally retained.
+- The executable is `/usr/bin/tmstreamer`. Existing settings in `/etc/ystreamer` and state in `/var/lib/ystreamer` are read only as migration fallbacks when the corresponding TMStreamer paths do not yet exist.
 - Never fabricate or reuse upstream signing keys, user credentials, activation secrets or TM-LIC private keys.
 - Keep TM-LIC activation and validation independent from upstream licensing.
 - Test on Radxa ROCK 3A hardware before declaring an installer ready.
@@ -42,7 +42,7 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 
 ## Installing the Debian package
 
-The ARM64 build produces a package named `tmstreamer` and installs the `tmstreamer.service` unit. The executable and upstream-compatible settings/state directories intentionally retain their existing YStreamer names.
+The ARM64 build produces a package named `tmstreamer`, installs `/usr/bin/tmstreamer`, and provides `tmstreamer.service`.
 
 On a compatible Debian 12 ARM64 device, install the downloaded package with:
 
@@ -52,7 +52,7 @@ sudo systemctl enable --now tmstreamer.service
 sudo systemctl status tmstreamer.service --no-pager
 ```
 
-Do not run a second copy if the old YStreamer service is already active; stop and disable that old unit before starting the new one. This package is not yet certified on Radxa ROCK 3A.
+Do not enable or start this service on a device that is currently running MundoStreamer or another DJI receiver until a separately approved cutover plan and hardware acceptance test are complete. Package installation itself does not enable or start the service. This package is not yet certified on Radxa ROCK 3A.
 
 ## TM-LIC integration
 

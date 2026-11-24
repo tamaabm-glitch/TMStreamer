@@ -45,7 +45,11 @@ pub struct Throttling {
 }
 
 pub fn unit() -> String {
-    std::env::var("YSTREAMER_UNIT").unwrap_or_else(|_| "ystreamer.service".into())
+    configured_unit(std::env::var("TMSTREAMER_UNIT").ok(), std::env::var("YSTREAMER_UNIT").ok())
+}
+
+fn configured_unit(tmstreamer: Option<String>, legacy: Option<String>) -> String {
+    tmstreamer.or(legacy).unwrap_or_else(|| "tmstreamer.service".into())
 }
 
 /// systemd sets INVOCATION_ID for every process it starts
@@ -181,7 +185,7 @@ pub fn reload_timezone() {
     unsafe { tzset() };
 }
 
-/// The zone can also be set outside YStreamer: raspi-config, timedatectl,
+/// The zone can also be set outside TMStreamer: raspi-config, timedatectl,
 /// or Raspberry Pi Imager's options on the first boot. The system's is the
 /// one that counts, so the settings follow it
 pub fn adopt_timezone(store: &crate::settings::SettingsStore) {
@@ -269,7 +273,7 @@ pub fn schedule(action: Action) -> Result<(), String> {
 
 pub async fn logs(lines: u32) -> Result<String, String> {
     if !under_systemd() {
-        return Err("Logs are available once YStreamer runs as a systemd service".into());
+        return Err("Logs are available once TMStreamer runs as a systemd service".into());
     }
     let unit = unit();
     let n = lines.clamp(10, 2000).to_string();

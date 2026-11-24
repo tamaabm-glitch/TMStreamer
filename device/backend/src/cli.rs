@@ -10,7 +10,7 @@ use crate::web::auth::{Auth, MIN_PASSWORD_LEN};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const HELP: &str = "\
-Usage: ystreamer <command>
+Usage: tmstreamer <command>
 
   status             Whether TMStreamer is running and where to open it
   restart            Restart TMStreamer
@@ -22,7 +22,7 @@ Usage: ystreamer <command>
   help               Show this
 
 restart, password and reset need sudo.
-`ystreamer run` is the TMStreamer service process.";
+`tmstreamer run` is the TMStreamer service process.";
 
 #[derive(Debug, PartialEq)]
 pub enum Command {
@@ -234,7 +234,7 @@ fn password(clear: bool) -> Result<(), String> {
 
     // The running service only reads the login when told to
     if service_active() && systemctl("reload").is_err() {
-        println!("Saved. Restart TMStreamer for it to take effect: sudo ystreamer restart");
+        println!("Saved. Restart TMStreamer for it to take effect: sudo tmstreamer restart");
     } else if clear {
         println!("The web interface no longer asks for a password.");
     } else {

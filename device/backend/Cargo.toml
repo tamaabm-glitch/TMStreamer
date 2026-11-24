@@ -6,15 +6,15 @@ license = "GPL-3.0-only"
 description = "TMStreamer: DJI video streaming, HDMI output, browser viewing and recording"
 
 [[bin]]
-name = "ystreamer"
+name = "tmstreamer"
 path = "src/main.rs"
 
 [package.metadata.deb]
-maintainer = "YarosFPV <yaros@yarosfpv.com>"
+maintainer = "TMStreamer Project <347674564+tamaabm-glitch@users.noreply.github.com>"
 section = "video"
 assets = [
     [
-        "target/release/ystreamer",
+        "target/release/tmstreamer",
         "usr/bin/",
         "755",
     ],

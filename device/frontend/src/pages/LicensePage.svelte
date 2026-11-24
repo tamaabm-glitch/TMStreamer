@@ -23,7 +23,6 @@
 
   async function refresh() {
     loading = true;
-    error = null;
     try {
       status = await api.licenseStatus();
     } catch (e) {

@@ -65,6 +65,11 @@ pub fn verify_envelope(
     }
 
     let key_id = string_field(envelope, "key_id")?;
+    if key_id == "." || key_id == ".."
+        || !key_id.chars().all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.'))
+    {
+        return Err("Key ID mengandung karakter yang tidak diizinkan".into());
+    }
     let payload = field(envelope, "payload")?;
     if !payload.is_object() {
         return Err("Payload lisensi tidak valid".into());

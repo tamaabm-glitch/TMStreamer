@@ -92,7 +92,7 @@
 
   const licenseLocked = (p: NavPage) => {
     if (!license.licensed) {
-      return !["input", "network", "display", "system", "logs", "performance"].includes(p.id);
+      return !["input", "network", "display", "system", "logs", "performance", "license"].includes(p.id);
     }
     if (p.id === "recording") return !license.canRecord;
     if (p.id === "streaming" || p.id === "watch") return !license.canStream;

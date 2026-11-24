@@ -224,10 +224,10 @@ impl Recorder {
     }
 
     fn start_session(&self, automatic: bool) -> Result<(), String> {
+        let mut guard = self.session.lock().unwrap();
         if !self.enabled.load(Ordering::Relaxed) {
             return Err("Recording requires an active TMStreamer license".into());
         }
-        let mut guard = self.session.lock().unwrap();
         if guard.is_some() {
             return Err("Already recording".into());
         }

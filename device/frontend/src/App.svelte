@@ -22,7 +22,9 @@
   // Reached from the sidebar by someone who's only watching
   const wantsLogin = $derived(address.path === "/login");
   const isWatchPage = $derived(page.id === "watch" && !wantsLogin);
-  const isLicenseTab = $derived(page.id === "system" && route.tab === "license");
+  const isLicenseTab = $derived(
+    page.id === "system" && route.tab === "license",
+  );
   const isSetupPage = $derived(
     !license.licensed &&
       !wantsLogin &&

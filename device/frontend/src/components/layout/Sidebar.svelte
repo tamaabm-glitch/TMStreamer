@@ -228,10 +228,7 @@
       ? 'bg-surface-2 text-fg'
       : 'text-muted hover:bg-surface-2/60 hover:text-fg'}"
   >
-    <p.icon
-      class={iconClass(p, active)}
-      aria-hidden="true"
-    />
+    <p.icon class={iconClass(p, active)} aria-hidden="true" />
     <span class="flex-1">{p.label}</span>
     {#if p.id === "recording" && transfer.running}
       <span title="Copying recordings">

@@ -256,11 +256,9 @@
   }
 }
 
-
 /* Context-colored navigation icons with a subtle dimensional edge and active glow. */
 .nav-icon-3d {
-  filter:
-    drop-shadow(0 1px 0 rgb(255 255 255 / 0.22))
+  filter: drop-shadow(0 1px 0 rgb(255 255 255 / 0.22))
     drop-shadow(0 2px 2px rgb(0 0 0 / 0.55));
   transition:
     filter 160ms ease,
@@ -275,8 +273,7 @@
 .nav-icon-active {
   opacity: 1;
   transform: translateY(-1px);
-  filter:
-    drop-shadow(0 0 5px currentColor)
+  filter: drop-shadow(0 0 5px currentColor)
     drop-shadow(0 1px 0 rgb(255 255 255 / 0.28))
     drop-shadow(0 2px 2px rgb(0 0 0 / 0.6));
 }

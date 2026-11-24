@@ -103,3 +103,11 @@ fn knows_when_the_drive_is_gone() {
         &[]
     ));
 }
+
+#[test]
+fn recording_cannot_start_when_license_entitlement_is_disabled() {
+    let recorder = Recorder::new(crate::settings::RecordingSettings::default());
+    recorder.set_enabled(false);
+    assert!(recorder.start().is_err());
+    assert!(!recorder.is_active());
+}

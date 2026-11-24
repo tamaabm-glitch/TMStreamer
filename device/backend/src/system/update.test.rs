@@ -78,66 +78,66 @@ fn only_a_higher_version_is_newer() {
 #[test]
 fn release_manifest_and_debian_package_versions_must_match_and_advance() {
     assert_eq!(
-        validate_release_version("0.1.4-1", Some("0.1.4"), "0.1.3"),
+        validate_release_version("0.1.6-1", Some("0.1.6"), "0.1.5"),
         Ok(())
     );
-    assert!(validate_release_version("0.1.4-1", Some("0.1.5"), "0.1.3").is_err());
-    assert!(validate_release_version("0.1.2-1", Some("0.1.2"), "0.1.3").is_err());
-    assert!(validate_release_version("garbled-1", Some("garbled"), "0.1.2").is_err());
+    assert!(validate_release_version("0.1.6-1", Some("0.1.7"), "0.1.5").is_err());
+    assert!(validate_release_version("0.1.4-1", Some("0.1.4"), "0.1.5").is_err());
+    assert!(validate_release_version("garbled-1", Some("garbled"), "0.1.5").is_err());
 }
 
 #[test]
 fn only_official_github_release_package_urls_are_accepted() {
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer_0.1.3-1_arm64.deb",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.5/tmstreamer_0.1.5-1_arm64.deb",
+            "0.1.5"
         )
         .is_ok()
     );
     assert!(
-        validate_release_package_url("https://github.com/example.com/tmstreamer.deb", "0.1.3")
+        validate_release_package_url("https://github.com/example.com/tmstreamer.deb", "0.1.5")
             .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb",
-            "0.1.3"
+            "https://github.com/other/repo/releases/download/v0.1.5/tmstreamer.deb",
+            "0.1.5"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.5/../../evil.deb",
+            "0.1.5"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/%2e%2e/evil.deb",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.5/%2e%2e/evil.deb",
+            "0.1.5"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/other-package.deb",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.5/other-package.deb",
+            "0.1.5"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer.deb/extra",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.5/tmstreamer.deb/extra",
+            "0.1.5"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.4/tmstreamer_0.1.3-1_arm64.deb",
-            "0.1.3"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.6/tmstreamer_0.1.5-1_arm64.deb",
+            "0.1.5"
         )
         .is_err()
     );

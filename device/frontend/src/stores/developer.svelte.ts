@@ -1,4 +1,5 @@
 import { snackbar } from "@/stores/snackbar.svelte";
+import { readMigrated } from "@/lib/storage";
 
 const KEY = "tmstreamer.developer";
 const LEGACY_KEY = "ystreamer.developer";
@@ -8,9 +9,7 @@ const TAP_GAP_MS = 1500;
 
 function load(): boolean {
   try {
-    const saved = localStorage.getItem(KEY) ?? localStorage.getItem(LEGACY_KEY);
-    if (saved !== null) localStorage.setItem(KEY, saved);
-    return saved === "1";
+    return readMigrated(KEY, LEGACY_KEY) === "1";
   } catch {
     return false;
   }
@@ -20,7 +19,6 @@ function save(on: boolean) {
   try {
     if (on) localStorage.setItem(KEY, "1");
     else localStorage.removeItem(KEY);
-    localStorage.removeItem(LEGACY_KEY);
   } catch {}
 }
 

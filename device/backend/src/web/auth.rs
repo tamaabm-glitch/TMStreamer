@@ -16,7 +16,7 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
-const COOKIE: &str = "ystreamer_session";
+const COOKIE: &str = "tmstreamer_session";
 const SESSION_TTL: Duration = Duration::from_secs(30 * 24 * 3600);
 const ITERATIONS: u32 = 100_000;
 pub const MIN_PASSWORD_LEN: usize = 6;
@@ -68,7 +68,7 @@ impl Auth {
         })
     }
 
-    /// Pick up a password changed from outside, by `ystreamer password`
+    /// Pick up a password changed from outside, by `tmstreamer password`
     pub fn reload(&self) {
         match fs::read_to_string(&self.path) {
             Ok(json) => match serde_json::from_str(&json) {

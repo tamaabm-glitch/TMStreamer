@@ -8,7 +8,8 @@ use crate::net::network::run;
 
 /// Both NetworkManager's profile and the network interface: the import
 /// names them after the file
-const NAME: &str = "ystreamer-wg";
+const NAME: &str = "tmstreamer-wg";
+const LEGACY_NAME: &str = "ystreamer-wg";
 const MAX_CONFIG_BYTES: usize = 64 * 1024;
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -41,7 +42,18 @@ pub struct Peer {
     pub keepalive: bool,
 }
 
+async fn profile_name() -> &'static str {
+    if run("nmcli", &["connection", "show", NAME]).await.is_ok() {
+        NAME
+    } else if run("nmcli", &["connection", "show", LEGACY_NAME]).await.is_ok() {
+        LEGACY_NAME
+    } else {
+        NAME
+    }
+}
+
 pub async fn status() -> Status {
+    let name = profile_name().await;
     let shown = run(
         "nmcli",
         &[
@@ -50,7 +62,7 @@ pub async fn status() -> Status {
             "GENERAL.STATE,IP4.ADDRESS",
             "connection",
             "show",
-            NAME,
+            name,
         ],
     )
     .await;
@@ -76,7 +88,7 @@ pub async fn status() -> Status {
         };
     }
     // Needs the wireguard tools; without them the tunnel still works
-    let peers = match run("wg", &["show", NAME, "dump"]).await {
+    let peers = match run("wg", &["show", name, "dump"]).await {
         Ok(dump) => parse_dump(&dump, now()),
         Err(_) => Vec::new(),
     };
@@ -149,7 +161,7 @@ pub async fn import(config: &[u8]) -> Result<Status, String> {
     check(text)?;
 
     // It holds a private key: a directory only we can enter, gone right after
-    let dir = std::env::temp_dir().join(format!("ystreamer-wg-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tmstreamer-wg-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::DirBuilder::new()
         .mode(0o700)
@@ -165,6 +177,7 @@ pub async fn import(config: &[u8]) -> Result<Status, String> {
     let result = match written {
         Ok(()) => {
             let _ = run("nmcli", &["connection", "delete", NAME]).await;
+            let _ = run("nmcli", &["connection", "delete", LEGACY_NAME]).await;
             let path = path.to_string_lossy();
             run(
                 "nmcli",
@@ -183,34 +196,38 @@ pub async fn import(config: &[u8]) -> Result<Status, String> {
 }
 
 pub async fn connect() -> Result<Status, String> {
+    let name = profile_name().await;
     run(
         "nmcli",
         &[
             "connection",
             "modify",
-            NAME,
+            name,
             "connection.autoconnect",
             "yes",
         ],
     )
     .await?;
-    run("nmcli", &["connection", "up", NAME]).await?;
+    run("nmcli", &["connection", "up", name]).await?;
     Ok(status().await)
 }
 
 /// Stays off across reboots too, until connected again
 pub async fn disconnect() -> Result<Status, String> {
+    let name = profile_name().await;
     run(
         "nmcli",
-        &["connection", "modify", NAME, "connection.autoconnect", "no"],
+        &["connection", "modify", name, "connection.autoconnect", "no"],
     )
     .await?;
-    let _ = run("nmcli", &["connection", "down", NAME]).await;
+    let _ = run("nmcli", &["connection", "down", name]).await;
     Ok(status().await)
 }
 
 pub async fn remove() -> Result<Status, String> {
-    run("nmcli", &["connection", "delete", NAME]).await?;
+    let name = profile_name().await;
+    run("nmcli", &["connection", "delete", name]).await?;
+    let _ = run("nmcli", &["connection", "delete", LEGACY_NAME]).await;
     Ok(status().await)
 }
 

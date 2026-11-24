@@ -9,9 +9,13 @@ use tokio::sync::Mutex;
 use crate::settings::{EthernetMode, EthernetSettings, WifiMode, WifiSettings};
 
 const IFACE: &str = "wlan0";
-const AP_CON: &str = "ystreamer-ap";
-const CLIENT_CON: &str = "ystreamer-wifi";
-const ETH_CON: &str = "ystreamer-eth";
+const AP_CON: &str = "tmstreamer-ap";
+// Read old NetworkManager profiles until the user next applies network settings.
+const LEGACY_AP_CON: &str = "ystreamer-ap";
+const CLIENT_CON: &str = "tmstreamer-wifi";
+const LEGACY_CLIENT_CON: &str = "ystreamer-wifi";
+const ETH_CON: &str = "tmstreamer-eth";
+const LEGACY_ETH_CON: &str = "ystreamer-eth";
 /// How long client mode may go without joining before the fallback AP
 const JOIN_TIMEOUT: Duration = Duration::from_secs(60);
 /// How long the device may be unreachable on every interface. Short: an
@@ -135,7 +139,7 @@ impl Network {
 
         match cfg.mode {
             WifiMode::Unmanaged => {
-                for con in [AP_CON, CLIENT_CON] {
+                for con in [AP_CON, CLIENT_CON, LEGACY_AP_CON, LEGACY_CLIENT_CON] {
                     let _ = run(
                         "nmcli",
                         &["con", "modify", con, "connection.autoconnect", "no"],
@@ -146,7 +150,11 @@ impl Network {
                 Ok(())
             }
             WifiMode::Ap => {
+                let _ = run("nmcli", &["con", "down", LEGACY_CLIENT_CON]).await;
+                let _ = run("nmcli", &["con", "down", LEGACY_AP_CON]).await;
                 delete_con(CLIENT_CON).await;
+                delete_con(LEGACY_CLIENT_CON).await;
+                delete_con(LEGACY_AP_CON).await;
                 write_ap_profile(cfg, true).await?;
                 run("nmcli", &["--wait", "30", "con", "up", AP_CON])
                     .await
@@ -157,10 +165,14 @@ impl Network {
                 if cfg.fallback_ap {
                     write_ap_profile(cfg, false).await?;
                     let _ = run("nmcli", &["con", "down", AP_CON]).await;
+                    let _ = run("nmcli", &["con", "down", LEGACY_AP_CON]).await;
+                    delete_con(LEGACY_AP_CON).await;
                 } else {
                     delete_con(AP_CON).await;
+                    delete_con(LEGACY_AP_CON).await;
                 }
                 write_client_profile(cfg).await?;
+                delete_con(LEGACY_CLIENT_CON).await;
                 let up = run("nmcli", &["--wait", "30", "con", "up", CLIENT_CON]).await;
                 if up.is_err() && cfg.fallback_ap {
                     // Don't wait out the full timeout: we already know it failed
@@ -269,6 +281,7 @@ impl Network {
         }
         eprintln!("[net] Ethernet is back and nobody uses the fallback access point, stopping it");
         let _ = run("nmcli", &["con", "down", AP_CON]).await;
+        let _ = run("nmcli", &["con", "down", LEGACY_AP_CON]).await;
         *self.fallback.lock().unwrap() = None;
     }
 
@@ -285,7 +298,10 @@ impl Network {
             }
         }
         let _ = run("nmcli", &["con", "down", CLIENT_CON]).await;
+        let _ = run("nmcli", &["con", "down", LEGACY_CLIENT_CON]).await;
         // System mode never wrote one
+        let _ = run("nmcli", &["con", "down", LEGACY_AP_CON]).await;
+        delete_con(LEGACY_AP_CON).await;
         if let Err(e) = write_ap_profile(cfg, false).await {
             eprintln!("[net] fallback AP failed: {e}");
             return;
@@ -326,14 +342,14 @@ impl Network {
                     this.apply_later(s.wifi);
                 });
             }
-            WifiMode::Client if !has(CLIENT_CON) => {
+            WifiMode::Client if !has(CLIENT_CON) && !has(LEGACY_CLIENT_CON) => {
                 eprintln!("[net] setting up WiFi for the first time");
                 self.apply_later(s.wifi.clone());
             }
             _ => {}
         }
 
-        if s.ethernet.mode == EthernetMode::System || has(ETH_CON) {
+        if s.ethernet.mode == EthernetMode::System || has(ETH_CON) || has(LEGACY_ETH_CON) {
             return;
         }
         if crate::settings::is_image() {
@@ -367,6 +383,7 @@ impl Network {
             .await
             .ok_or("This device has no Ethernet port")?;
         delete_con(ETH_CON).await;
+        delete_con(LEGACY_ETH_CON).await;
         if cfg.mode == EthernetMode::System {
             // Let NetworkManager pick the OS's own profile again
             let _ = run("nmcli", &["dev", "connect", &dev]).await;
@@ -685,7 +702,7 @@ async fn ethernet_up() -> bool {
 async fn ap_active() -> bool {
     run("nmcli", &["-g", "GENERAL.CONNECTION", "dev", "show", IFACE])
         .await
-        .is_ok_and(|c| c.trim() == AP_CON)
+        .is_ok_and(|c| c.trim() == AP_CON || c.trim() == LEGACY_AP_CON)
 }
 
 async fn ap_unused() -> bool {

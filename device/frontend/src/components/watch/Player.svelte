@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy, untrack, flushSync } from "svelte";
+  import { readMigrated } from "@/lib/storage";
   import { statusLabel } from "@/lib/status";
   import type { PlayerHistory, PlayerStat, Status } from "@/types/stream";
   import { recording, duration } from "@/stores/recording.svelte";
@@ -71,8 +72,7 @@
 
   function readPref(key: string, legacyKey: string, fallback: boolean) {
     try {
-      const v = localStorage.getItem(key) ?? localStorage.getItem(legacyKey);
-      if (v !== null) localStorage.setItem(key, v);
+      const v = readMigrated(key, legacyKey);
       return v === null ? fallback : v === "1";
     } catch {
       return fallback;

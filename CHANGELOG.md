@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.5
+
+- Use TMStreamer names for fresh NetworkManager and WireGuard profiles while preserving existing legacy profiles until the user reapplies settings.
+- Save new recordings under /var/lib/tmstreamer and keep older recording folders selectable without moving or deleting data.
+- Migrate browser preferences to TMStreamer storage keys and replace upstream support/download links.
+- Rename the GPIO recording-button consumer and authentication session cookie.
+
+## 0.1.4
+
+- Add experimental DJI RC-N2 / RC-N3 direct USB video input through FunctionFS Android Accessory mode.
+- Add queued USB reads, DUML session reset, H.265 detection and automatic keyframe requests.
+- Prefer Rockchip MPP H.265 decode / H.264 encode on Radxa RK3568, with FFmpeg fallback.
+- Use Rockchip MPP for USB capture encoding when available and expose DJI codec status in the dashboard.
+
 ## 0.1.3
 
 - Rename the installed executable and systemd service to TMStreamer.

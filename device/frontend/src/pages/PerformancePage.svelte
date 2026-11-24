@@ -1,6 +1,7 @@
 
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
+  import { readMigrated } from "@/lib/storage";
   import { metrics } from "@/stores/metrics.svelte";
   import Card from "@/components/ui/Card.svelte";
   import Chart, { type ChartSeries } from "@/components/ui/Chart.svelte";
@@ -25,7 +26,7 @@
 
   function readRange() {
     try {
-      const v = Number(localStorage.getItem("tmstreamer.perf.range") ?? localStorage.getItem("ystreamer.perf.range"));
+      const v = Number(readMigrated("tmstreamer.perf.range", "ystreamer.perf.range"));
       return RANGES.some((r) => r.value === v) ? v : 300;
     } catch {
       return 300;
@@ -37,7 +38,6 @@
 
     try {
       localStorage.setItem("tmstreamer.perf.range", String(v));
-      localStorage.removeItem("ystreamer.perf.range");
     } catch {}
   }
 

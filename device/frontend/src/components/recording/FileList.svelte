@@ -1,6 +1,7 @@
 <script lang="ts">
   import { SvelteSet } from "svelte/reactivity";
   import { api, message } from "@/api/client";
+  import { readMigrated } from "@/lib/storage";
   import { bytes, recording } from "@/stores/recording.svelte";
   import { transfer } from "@/stores/transfer.svelte";
   import { snackbar } from "@/stores/snackbar.svelte";
@@ -36,9 +37,7 @@
 
   function restoreView(): View {
     try {
-      const saved = localStorage.getItem(VIEW_KEY) ?? localStorage.getItem(LEGACY_VIEW_KEY);
-      if (saved !== null) localStorage.setItem(VIEW_KEY, saved);
-      return saved === "list" ? "list" : "grid";
+      return readMigrated(VIEW_KEY, LEGACY_VIEW_KEY) === "list" ? "list" : "grid";
     } catch {
       return "grid";
     }
@@ -53,7 +52,6 @@
     shown = STEP[v];
     try {
       localStorage.setItem(VIEW_KEY, v);
-      localStorage.removeItem(LEGACY_VIEW_KEY);
     } catch {}
   }
 

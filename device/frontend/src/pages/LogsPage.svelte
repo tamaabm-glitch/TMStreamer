@@ -4,6 +4,7 @@
   import { api, message } from "@/api/client";
   import { btn } from "@/components/ui/buttons";
   import Switch from "@/components/ui/Switch.svelte";
+  import { readMigrated } from "@/lib/storage";
 
   const REFRESH_KEY = "tmstreamer.logs.refresh";
   const LEGACY_REFRESH_KEY = "ystreamer.logs.refresh";
@@ -12,9 +13,7 @@
 
   function savedRefresh(): boolean {
     try {
-      const saved = localStorage.getItem(REFRESH_KEY) ?? localStorage.getItem(LEGACY_REFRESH_KEY);
-      if (saved !== null) localStorage.setItem(REFRESH_KEY, saved);
-      return saved !== "0";
+      return readMigrated(REFRESH_KEY, LEGACY_REFRESH_KEY) !== "0";
     } catch {
       return true;
     }
@@ -58,7 +57,6 @@
     try {
       if (on) localStorage.removeItem(REFRESH_KEY);
       else localStorage.setItem(REFRESH_KEY, "0");
-      localStorage.removeItem(LEGACY_REFRESH_KEY);
     } catch {}
 
     if (on) load(true);

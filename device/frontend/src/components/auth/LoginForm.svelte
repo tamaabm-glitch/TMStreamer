@@ -26,7 +26,7 @@
     <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface-2"><Lock class="h-4 w-4 text-muted" aria-hidden="true" /></span>
     <div><h2 class="text-[15px] font-semibold text-fg">Log in</h2><p class="text-[12px] text-muted">{reason}</p></div>
   </div>
-  <input type="text" name="username" autocomplete="username" value="ystreamer" readonly hidden />
+  <input type="text" name="username" autocomplete="username" value="tmstreamer" readonly hidden />
   <label class="flex flex-col gap-1.5 text-[13px] text-fg">Password
     <TextField secret name="password" autocomplete="current-password" bind:value={password} class="sm:w-full!" />
   </label>

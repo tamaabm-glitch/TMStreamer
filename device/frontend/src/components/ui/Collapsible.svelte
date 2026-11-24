@@ -2,6 +2,7 @@
   import { slide } from "svelte/transition";
   import type { Snippet } from "svelte";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
+  import { readMigrated } from "@/lib/storage";
 
   interface Props {
     title: string;
@@ -26,10 +27,9 @@
   const legacyKey = $derived(id ? `ystreamer.panel.${id}` : null);
 
   function restore(): boolean {
-    if (!key) return initial;
+    if (!key || !legacyKey) return initial;
     try {
-      const v = localStorage.getItem(key) ?? (legacyKey ? localStorage.getItem(legacyKey) : null);
-      if (v !== null) localStorage.setItem(key, v);
+      const v = readMigrated(key, legacyKey);
       return v === null ? initial : v === "1";
     } catch {
       return initial;
@@ -43,7 +43,6 @@
     if (!key) return;
     try {
       localStorage.setItem(key, open ? "1" : "0");
-      if (legacyKey) localStorage.removeItem(legacyKey);
     } catch {}
   }
 </script>

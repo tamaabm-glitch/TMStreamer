@@ -31,7 +31,7 @@ pub struct Status {
     pub state: State,
     /// Where to sign in, while a login is under way
     pub login_url: Option<String>,
-    /// e.g. `ystreamer.tail1234.ts.net`
+    /// e.g. `tmstreamer.tail1234.ts.net`
     pub name: Option<String>,
     pub addresses: Vec<String>,
     pub network: Option<String>,

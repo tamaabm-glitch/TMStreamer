@@ -534,11 +534,11 @@ pub fn storage_options(current: &Path) -> Vec<StorageOption> {
         missing: false,
     }];
 
-    // Older recordings remain selectable; never move or delete them implicitly.
-    let legacy_internal = Path::new("/var/lib/ystreamer/recordings");
-    if legacy_internal.is_dir() {
+    // Keep older recordings selectable; never move or delete them implicitly.
+    let legacy = Path::new("/var/lib/ystreamer/recordings");
+    if legacy.is_dir() {
         options.push(StorageOption {
-            path: legacy_internal.display().to_string(),
+            path: legacy.display().to_string(),
             label: "Legacy recordings".into(),
             free_bytes: disk_usage(Path::new("/var/lib/ystreamer"))
                 .or_else(|| disk_usage(Path::new("/")))

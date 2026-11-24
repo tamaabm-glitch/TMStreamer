@@ -385,7 +385,7 @@ async fn license_watch(services: crate::web::api::Services) {
         if !recording_ok && !recording_locked {
             if services.recorder.is_active() {
                 let recorder = Arc::clone(&services.recorder);
-                let _ = tokio::task::spawn_blocking(move || recorder.stop()).await;
+                let _ = tokio::task::spawn_blocking(move || recorder.stop_for_license()).await;
             }
             eprintln!("[license] recording entitlement unavailable; DVR stopped");
             recording_locked = true;

@@ -104,7 +104,7 @@ pub fn verify_envelope(
     let signature_bytes = URL_SAFE_NO_PAD.decode(&signature_text)
         .or_else(|_| URL_SAFE.decode(&signature_text))
         .map_err(|_| "Encoding signature tidak valid".to_string())?;
-    let signature = Signature::from_slice(&signature_bytes)
+    let signature = Signature::try_from(signature_bytes.as_slice())
         .map_err(|_| "Panjang signature tidak valid".to_string())?;
     let canonical_payload = serde_json::to_vec(payload)
         .map_err(|_| "Payload tidak dapat diserialisasi".to_string())?;

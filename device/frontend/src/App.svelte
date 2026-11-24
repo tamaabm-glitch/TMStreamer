@@ -22,9 +22,11 @@
   // Reached from the sidebar by someone who's only watching
   const wantsLogin = $derived(address.path === "/login");
   const isWatchPage = $derived(page.id === "watch" && !wantsLogin);
+  const isLicenseTab = $derived(page.id === "system" && route.tab === "license");
   const isSetupPage = $derived(
     !license.licensed &&
       !wantsLogin &&
+      !isLicenseTab &&
       ["input", "network", "display", "system", "logs", "performance"].includes(
         page.id,
       ),
@@ -100,8 +102,6 @@
       <LoginForm reason="Log in to change settings and control the camera." />
     {:else if isWatchPage}
       <WatchPage title={page.label} bind:theater />
-    {:else if page.id === "license"}
-      <LicensePage manage />
     {:else}
       <PageHeader title={page.label} />
       {#if auth.admin}

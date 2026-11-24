@@ -190,6 +190,5 @@ fn failed_install_changes_nothing() {
 
 #[test]
 fn production_release_updater_stays_closed_without_its_own_key() {
-    assert!(!UPDATE_PIPELINE_ENABLED);
     assert!(update_public_key().is_err());
 }

@@ -9,7 +9,7 @@ This branch adds a native Rust verifier and device-side activation flow for TM-L
 - Public key registry: `/usr/share/ystreamer/tm-lic/registry.json`
 - Public keys: `/usr/share/ystreamer/tm-lic/public_keys/<key_id>.pem`
 
-The state directory is within the existing systemd `StateDirectory=ystreamer`, so it is persistent across package upgrades. The TM-LIC subdirectory is set to mode 0700; Machine ID and license files are created with mode 0600. Machine ID is generated once from the operating system CSPRNG and persisted. It is a random persistent identifier, not a hardware fingerprint. A malformed existing Machine ID is reported as an error and is never silently replaced.
+The default state path is a proposed location under the existing systemd `StateDirectory=ystreamer`. Before the first Radxa deployment, verify the actual image mount layout and persistence of `/var/lib/ystreamer`; override it with `TM_LIC_STATE_DIR` if the device uses a different persistent data mount. Do not deploy until that storage audit is complete. The TM-LIC subdirectory is set to mode 0700; Machine ID and license files are created with mode 0600. Machine ID is generated once from the operating system CSPRNG and persisted. It is a random persistent identifier, not a hardware fingerprint. A malformed existing Machine ID is reported as an error and is never silently replaced.
 
 For test or staging environments, the paths can be overridden with:
 

@@ -1,4 +1,4 @@
-
+ 
 name: TMStreamer Debian 12 ARM64 Build
 
 on:
@@ -76,10 +76,10 @@ jobs:
           set -euo pipefail
 
           DEB="$(find device/backend/target/debian \
-            -maxdepth 1 -type f -name "*.deb" -print -quit)"
+            -maxdepth 1 -type f -name "tmstreamer_*.deb" -print -quit)"
 
           if [ -z "$DEB" ]; then
-            echo "::error::Debian package was not generated."
+            echo "::error::TMStreamer Debian package was not generated."
             exit 1
           fi
 
@@ -93,6 +93,11 @@ jobs:
           echo "Architecture: $ARCH"
           echo "Dependencies: $DEPENDS"
 
+          if [ "$PACKAGE" != "tmstreamer" ]; then
+            echo "::error::Expected package name tmstreamer."
+            exit 1
+          fi
+
           if [ "$ARCH" != "arm64" ]; then
             echo "::error::Expected ARM64 package."
             exit 1
@@ -103,12 +108,13 @@ jobs:
             exit 1
           fi
 
-          dpkg-deb --contents "$DEB"
+          dpkg-deb --contents "$DEB" | tee package-contents.txt
+          grep -q "./lib/systemd/system/tmstreamer.service" package-contents.txt
 
       - name: Upload TMStreamer Debian 12 ARM64
         uses: actions/upload-artifact@v4
         with:
           name: TMStreamer-Debian12-ARM64
-          path: device/backend/target/debian/*.deb
+          path: device/backend/target/debian/tmstreamer_*.deb
           if-no-files-found: error
           retention-days: 14

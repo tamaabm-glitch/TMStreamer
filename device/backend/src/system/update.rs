@@ -161,6 +161,7 @@ pub async fn download() -> Result<(), String> {
             return Err(format!("Couldn't read the download: {error}"));
         }
     };
+    verify(update_public_key()?, &deb, &package.signature)?;
     let checked = check_package(&path, Some(&manifest.version)).await;
     let _ = fs::remove_file(&path);
     checked?;

@@ -113,6 +113,7 @@ pub fn start(
                 Arc::clone(&services.recorder),
                 control_tx.clone(),
             ));
+            tokio::spawn(license_watch(services.clone()));
 
             let state = AppState {
                 api,
@@ -340,4 +341,56 @@ async fn health() -> impl axum::response::IntoResponse {
             r#""}"#
         ),
     )
+}
+
+
+/// Re-check entitlements while the device is running. If a license expires or
+/// the verifier becomes unavailable, paid outputs are stopped fail-closed.
+async fn license_watch(services: crate::web::api::Services) {
+    let mut streaming_locked = false;
+    let mut recording_locked = false;
+    loop {
+        tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+
+        let streaming_ok = tokio::task::spawn_blocking(|| {
+            crate::web::api::license::feature_enabled("streaming")
+        })
+        .await
+        .unwrap_or(false);
+        if !streaming_ok && !streaming_locked {
+            let cfg = services.store.get();
+            let mut rtsp = cfg.rtsp;
+            rtsp.enabled = false;
+            let _ = services.rtsp.apply(&rtsp);
+            let mut srt = cfg.srt;
+            srt.enabled = false;
+            let _ = services.srt.apply(&srt);
+            let mut rtmp = cfg.rtmp;
+            rtmp.enabled = false;
+            services.rtmp.apply(&rtmp);
+            let mut udp = cfg.udp;
+            udp.enabled = false;
+            let _ = services.udp.apply(&udp);
+            eprintln!("[license] streaming entitlement unavailable; paid outputs stopped");
+            streaming_locked = true;
+        } else if streaming_ok {
+            streaming_locked = false;
+        }
+
+        let recording_ok = tokio::task::spawn_blocking(|| {
+            crate::web::api::license::feature_enabled("recording")
+        })
+        .await
+        .unwrap_or(false);
+        if !recording_ok && !recording_locked {
+            if services.recorder.is_active() {
+                let recorder = Arc::clone(&services.recorder);
+                let _ = tokio::task::spawn_blocking(move || recorder.stop()).await;
+            }
+            eprintln!("[license] recording entitlement unavailable; DVR stopped");
+            recording_locked = true;
+        } else if recording_ok {
+            recording_locked = false;
+        }
+    }
 }

@@ -453,7 +453,7 @@ mod tests {
             "expires_at": null,
             "features": ["recording", "streaming"]
         });
-        let bytes = serde_json::to_vec(&payload).unwrap();
+        let bytes = canonical_json(&payload).unwrap();
         let signature = URL_SAFE_NO_PAD.encode(signing.sign(&bytes).to_bytes());
         let envelope = serde_json::json!({
             "format": "TM-LIC",

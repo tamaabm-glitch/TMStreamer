@@ -516,6 +516,36 @@ mod tests {
     }
 
     #[test]
+    fn activation_writes_only_a_verified_license() {
+        let (envelope, registry, dir) = fixture();
+        let state_dir = dir.join("state");
+        let registry_path = dir.join("registry.json");
+        fs::write(&registry_path, serde_json::to_vec(&registry).unwrap()).unwrap();
+        let machine_id = envelope["payload"]["machine_id"].as_str().unwrap().to_owned();
+        let service = LicenseService {
+            state_dir: state_dir.clone(),
+            public_key_dir: dir.clone(),
+            registry_path,
+            machine_id: Ok(machine_id),
+            lock: std::sync::Arc::new(std::sync::Mutex::new(())),
+        };
+
+        let mut tampered = envelope.clone();
+        tampered["payload"]["tier"] = Value::String("FREE".into());
+        let invalid = serde_json::to_vec(&tampered).unwrap();
+        assert!(service.activate(&invalid).is_err());
+        assert!(!state_dir.join("license.json").exists());
+
+        let valid = serde_json::to_vec(&envelope).unwrap();
+        let status = service.activate(&valid).unwrap();
+        assert!(status.licensed);
+        assert_eq!(status.license_id.as_deref(), Some("test-license"));
+        assert!(state_dir.join("license.json").is_file());
+        assert!(service.status().licensed);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn corrupt_machine_id_is_not_silently_replaced() {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-corrupt-machine-id-{}-{}",

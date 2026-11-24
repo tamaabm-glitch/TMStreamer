@@ -466,7 +466,7 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         fs::write(
             dir.join("tm-lic-main-1.pem"),
-            "-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAHSfYgqOgIMKy3/YdWdXtAL6vWT2Y5yZjWwpJXk4wc1w=\\n-----END PUBLIC KEY-----\\n",
+            "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAHSfYgqOgIMKy3/YdWdXtAL6vWT2Y5yZjWwpJXk4wc1w=\n-----END PUBLIC KEY-----\n",
         ).unwrap();
         let registry = serde_json::json!({
             "format": "TM-LIC-KEY-REGISTRY",

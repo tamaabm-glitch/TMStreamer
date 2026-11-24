@@ -40,8 +40,8 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-openssl genpkey -algorithm ED25519 -out "$PRIVATE_KEY"
 PRIVATE_CREATED=1
+openssl genpkey -algorithm ED25519 -out "$PRIVATE_KEY"
 chmod 600 "$PRIVATE_KEY"
 openssl pkey -in "$PRIVATE_KEY" -pubout -outform DER -out "$DER"
 tail -c 32 "$DER" > "$RAW"

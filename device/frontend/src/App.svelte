@@ -4,6 +4,8 @@
   import { control } from "@/stores/control.svelte";
   import { settings } from "@/stores/settings.svelte";
   import { auth } from "@/stores/auth.svelte";
+  import { api } from "@/api/client";
+  import type { LicenseStatus } from "@/types/license";
   import { routeOf } from "@/lib/nav";
   import { route as address } from "@/stores/route.svelte";
   import LoginForm from "@/components/auth/LoginForm.svelte";
@@ -14,6 +16,7 @@
   import Snackbar from "@/components/layout/Snackbar.svelte";
   import WatchPage from "@/pages/WatchPage.svelte";
   import SettingsView from "@/pages/SettingsView.svelte";
+  import LicensePage from "@/pages/LicensePage.svelte";
 
   const route = $derived(routeOf(address.path));
   const page = $derived(route.page);
@@ -26,6 +29,21 @@
   });
 
   let theater = $state(false);
+  let licenseStatus = $state<LicenseStatus | null>(null);
+  const streamingLicensed = $derived(
+    licenseStatus?.product === "TMSTREAMER" &&
+    licenseStatus?.license_system === "TM-LIC" &&
+    licenseStatus?.activated === true &&
+    licenseStatus?.status === "LICENSED" &&
+    licenseStatus.features.includes("streaming")
+  );
+  const recordingLicensed = $derived(
+    licenseStatus?.product === "TMSTREAMER" &&
+    licenseStatus?.license_system === "TM-LIC" &&
+    licenseStatus?.activated === true &&
+    licenseStatus?.status === "LICENSED" &&
+    licenseStatus.features.includes("recording")
+  );
 
   function onbeforeunload(e: BeforeUnloadEvent) {
     if (settings.dirty.length) e.preventDefault();
@@ -39,6 +57,7 @@
 
   onMount(async () => {
     await auth.load();
+    try { licenseStatus = await api.licenseStatus(); } catch { licenseStatus = null; }
     connect();
     auth.onChange(connect);
   });
@@ -67,6 +86,18 @@
     {#if wantsLogin}
       <PageHeader title="Log in" />
       <LoginForm reason="Log in to change settings and control the camera." />
+    {:else if page.id === "license"}
+      <PageHeader title={page.label} />
+      <LicensePage />
+    {:else if isWatchPage && !streamingLicensed}
+      <PageHeader title="TM-LIC License" />
+      <LicensePage />
+    {:else if page.id === "streaming" && !streamingLicensed}
+      <PageHeader title="TM-LIC License" />
+      <LicensePage />
+    {:else if page.id === "recording" && !recordingLicensed}
+      <PageHeader title="TM-LIC License" />
+      <LicensePage />
     {:else if isWatchPage}
       <WatchPage title={page.label} bind:theater />
     {:else}

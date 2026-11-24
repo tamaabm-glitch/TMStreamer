@@ -10,6 +10,7 @@ import Cable from "@lucide/svelte/icons/cable";
 import Activity from "@lucide/svelte/icons/activity";
 import ScrollText from "@lucide/svelte/icons/scroll-text";
 import SquareTerminal from "@lucide/svelte/icons/square-terminal";
+import ShieldCheck from "@lucide/svelte/icons/shield-check";
 
 export interface NavTab {
   id: string;
@@ -76,12 +77,13 @@ export const SETTINGS_PAGES: NavPage[] = [
     ],
   },
   { id: "terminal", label: "Terminal", sections: [], icon: SquareTerminal, developer: true },
+  { id: "license", label: "TM-LIC License", sections: [], icon: ShieldCheck },
 ];
 
 export const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
   ["Video", ["input", "display"]],
   ["Streaming", ["streaming", "recording"]],
-  ["System", ["network", "performance", "logs", "system", "terminal"]],
+  ["System", ["network", "performance", "logs", "system", "terminal", "license"]],
 ].map(([label, ids]) => ({
   label: label as string,
   pages: (ids as string[]).map((id) => SETTINGS_PAGES.find((p) => p.id === id)!),

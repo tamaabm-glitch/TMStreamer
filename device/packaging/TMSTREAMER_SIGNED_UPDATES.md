@@ -5,7 +5,7 @@ It does not trust the former YStreamer signing key or update server.
 
 ## 1. Create the TMStreamer release key
 
-Run `device/packaging/generate-update-key.sh` on the release operator's
+Run `sh device/packaging/generate-update-key.sh` on the release operator's
 trusted workstation (preferably offline). The default outputs are:
 
 - Private Ed25519 PEM: `~/.config/tmstreamer/release-signing-ed25519.pem`

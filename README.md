@@ -33,11 +33,12 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 ## Safety and compatibility principles
 
 - Preserve DJI DUML parsing, USB handling, camera control, GStreamer pipelines, streaming, HDMI and recording unless a change is separately tested.
-- Keep Linux service/package identifiers such as ystreamer unchanged during visual rebranding; renaming them can break upgrades, settings and service management.
+- Debian package identity is `tmstreamer`; the systemd unit is `tmstreamer.service`.
+- The executable remains `/usr/bin/ystreamer` for compatibility with the existing upstream CLI and runtime layout. Existing settings and state directories under `/etc/ystreamer` and `/var/lib/ystreamer` are intentionally retained.
 - Never fabricate or reuse upstream signing keys, user credentials, activation secrets or TM-LIC private keys.
 - Keep TM-LIC activation and validation independent from upstream licensing.
 - Test on Radxa ROCK 3A hardware before declaring an installer ready.
-- Back up settings and recordings before any on-device upgrade.
+- On-device deployment should preserve existing settings and recordings.
 
 ## TM-LIC integration
 
@@ -48,7 +49,7 @@ The integration uses the TM-LIC verifier as the only entitlement authority; it d
 - The dashboard accepts a signed TM-LIC JSON license file. The backend verifies the staged file against the device identity and registered public key before atomically replacing `/data/state/tm-lic/licenses/TMStreamer-LICENSE.json`. An invalid file does not replace an existing license.
 - Streaming and DVR routes/settings require the corresponding `streaming` and `recording` entitlements. Startup also keeps paid outputs and the physical recording trigger disabled when verification fails.
 - Receiver, camera control (`/control`), network, display and HDMI setup remain available without a license.
-- Restart TMStreamer after a new license is activated so output transports disabled during startup can be initialized with the newly verified entitlement.
+- Restart `tmstreamer.service` after a new license is activated so output transports disabled during startup can be initialized with the newly verified entitlement.
 
 The device package declares Python 3 because the TM-LIC verifier is a separate runtime installed alongside TMStreamer. The issuer's private signing key must remain off the device.
 
@@ -72,7 +73,7 @@ See mise.toml for the full task list. The Debian package build requires the GStr
 | Path | Contents |
 | --- | --- |
 | device/backend/ | Rust service, DJI input, GStreamer and web API |
-| device/frontend/ | Svelte web dashboard and visual assets |
+| device/frontend/ | Svelte dashboard and visual assets |
 | device/packaging/ | Debian packaging, service unit and install scripts |
 | image/ | Upstream Raspberry Pi image build |
 | site/ | Documentation website |

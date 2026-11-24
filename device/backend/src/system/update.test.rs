@@ -76,6 +76,17 @@ fn only_a_higher_version_is_newer() {
 }
 
 #[test]
+fn release_manifest_and_debian_package_versions_must_match_and_advance() {
+    assert_eq!(
+        validate_release_version("0.1.3-1", Some("0.1.3"), "0.1.2"),
+        Ok(())
+    );
+    assert!(validate_release_version("0.1.3-1", Some("0.1.4"), "0.1.2").is_err());
+    assert!(validate_release_version("0.1.1-1", Some("0.1.1"), "0.1.2").is_err());
+    assert!(validate_release_version("garbled-1", Some("garbled"), "0.1.2").is_err());
+}
+
+#[test]
 fn manifest_reads_without_notes() {
     let manifest: Manifest = serde_json::from_str(
         r#"{"version": "0.2.0", "packages": {"arm64": {"url": "https://example.com/a.deb", "signature": "c2ln"}}}"#,

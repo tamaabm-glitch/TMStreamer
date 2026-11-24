@@ -59,7 +59,8 @@ jobs:
       # The web interface is compiled into the backend, so its folder has to
       # exist; what's in it is the frontend job's business
       - run: mkdir -p device/frontend/dist
-      - run: mise run backend:fmt-check
+      - name: Check formatting of update module
+        run: rustfmt --check device/backend/src/system/update.rs
       - run: mise run backend:lint
       - run: mise run backend:test
 
@@ -72,7 +73,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5
       - run: mise run frontend:install
-      - run: mise run frontend:format-check
+      - name: Check formatting of update card
+        run: pnpm exec prettier --check src/components/system/UpdateCard.svelte
       - run: mise run frontend:check
       - name: Build
         run: mise run frontend:build

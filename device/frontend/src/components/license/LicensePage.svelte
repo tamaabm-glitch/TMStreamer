@@ -5,6 +5,8 @@
   import Copy from "@lucide/svelte/icons/copy";
   import Upload from "@lucide/svelte/icons/upload";
 
+  let { manage = false }: { manage?: boolean } = $props();
+
   let selected = $state<File | null>(null);
   let notice = $state<string | null>(null);
 
@@ -40,20 +42,28 @@
         <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
           TMStreamer License
         </p>
-        {#if license.licensed}
+        {#if license.licensed && !manage}
           <h1 class="text-xl font-semibold text-fg">Fitur tidak termasuk paket</h1>
+        {:else if license.licensed}
+          <h1 class="text-xl font-semibold text-fg">Lisensi TMStreamer aktif</h1>
         {:else}
           <h1 class="text-xl font-semibold text-fg">Aktivasi diperlukan</h1>
         {/if}
       </div>
     </div>
 
-    {#if license.licensed}
+    {#if license.licensed && !manage}
       <p class="text-sm leading-6 text-muted">
         Lisensi {license.status?.tier ?? ""} sudah aktif, tetapi paket ini belum
         mencakup fitur yang sedang dibuka. Fitur aktif:
         {license.status?.features.join(", ") || "tidak ada"}.
         Unggah lisensi dengan hak fitur yang sesuai untuk memperbarui paket perangkat.
+      </p>
+    {:else if license.licensed}
+      <p class="text-sm leading-6 text-muted">
+        Lisensi {license.status?.tier ?? ""} aktif. Fitur tersedia:
+        {license.status?.features.join(", ") || "tidak ada"}.
+        Kamu dapat mengunggah file lisensi baru untuk memperbarui hak fitur perangkat.
       </p>
     {:else}
       <p class="text-sm leading-6 text-muted">

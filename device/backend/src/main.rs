@@ -46,6 +46,7 @@ fn run() -> anyhow::Result<()> {
     let license = tm_lic::LicenseService::load();
     let streaming_licensed = license.has_feature("streaming");
     let recording_licensed = license.has_feature("recording");
+    let initial_license_status = license.status();
 
     // Outputs first, so the web server can reconfigure them from settings
     let overlay = overlay::Overlay::load(store.path().with_file_name("overlay.png"), &cfg.overlay);
@@ -133,6 +134,7 @@ fn run() -> anyhow::Result<()> {
         auth,
         license,
         streaming_enabled: Arc::new(std::sync::atomic::AtomicBool::new(streaming_licensed)),
+        applied_license_status: Arc::new(std::sync::Mutex::new(initial_license_status)),
         network: Arc::clone(&network),
         rtsp: Arc::clone(&rtsp_server),
         srt: Arc::clone(&srt),

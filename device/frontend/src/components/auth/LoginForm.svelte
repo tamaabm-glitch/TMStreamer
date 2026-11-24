@@ -33,9 +33,9 @@
 >
   <div class="flex flex-col items-center gap-3 pb-2 text-center">
     <img
-      src="/logo.png"
+      src="/logo.svg"
       alt="TMStreamer"
-      class="h-auto w-full max-w-[240px] object-contain"
+      class="h-auto w-full max-w-[96px] object-contain"
     />
     <div>
       <h2 class="text-[17px] font-semibold text-fg">TMStreamer</h2>

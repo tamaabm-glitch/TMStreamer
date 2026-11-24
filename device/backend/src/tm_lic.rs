@@ -457,6 +457,49 @@ mod tests {
     }
 
     #[test]
+    fn verifies_reference_python_issued_license() {
+        let dir = std::env::temp_dir().join(format!(
+            "tm-lic-python-fixture-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join("tm-lic-main-1.pem"),
+            "-----BEGIN PUBLIC KEY-----\\nMCowBQYDK2VwAyEAHSfYgqOgIMKy3/YdWdXtAL6vWT2Y5yZjWwpJXk4wc1w=\\n-----END PUBLIC KEY-----\\n",
+        ).unwrap();
+        let registry = serde_json::json!({
+            "format": "TM-LIC-KEY-REGISTRY",
+            "version": 1,
+            "active_key_id": "tm-lic-main-1",
+            "keys": {"tm-lic-main-1": {"algorithm": "Ed25519", "status": "active"}}
+        });
+        let envelope = serde_json::json!({
+            "format": "TM-LIC",
+            "format_version": 1,
+            "key_id": "tm-lic-main-1",
+            "payload": {
+                "schema_version": 1,
+                "product": "TMSTREAMER",
+                "license_id": "6fafc1cb-6d20-4b9c-b8c6-e824c95ac349",
+                "machine_id": "TM-TEST-DEVICE-001",
+                "tier": "PRO",
+                "issued_at": "2026-11-21T05:01:04+00:00",
+                "expires_at": null,
+                "features": ["recording", "streaming"]
+            },
+            "signature": "jJEXHIWS6eaoIab0lfU9lD9TClFmTPhyiZ8ifDVCERZbCqZWCKtwUT6Y48LLiO5mfeu-NXZvdSTOUiBNM_g2BA"
+        });
+        let result = verify_envelope(
+            &envelope, "TM-TEST-DEVICE-001", &registry, &dir
+        ).unwrap();
+        assert_eq!(result.license_id, "6fafc1cb-6d20-4b9c-b8c6-e824c95ac349");
+        assert_eq!(result.tier, "PRO");
+        assert_eq!(result.features, vec!["recording", "streaming"]);
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn machine_id_is_persistent_and_well_formed() {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-machine-id-{}-{}",

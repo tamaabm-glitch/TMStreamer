@@ -102,6 +102,8 @@ jobs:
             pkg-config libglib2.0-dev libgstreamer1.0-dev \
             libgstreamer-plugins-base1.0-dev libgstrtspserver-1.0-dev
       - uses: jdx/mise-action@v5
+      - name: Install frontend dependencies
+        run: mise run frontend:install
       - name: Build Debian ARM64 package
         run: mise run device:package
       - name: Audit Debian package and maintainer scripts
@@ -112,10 +114,11 @@ jobs:
           test -n "$deb"
           test "$(dpkg-deb -f "$deb" Package)" = "tmstreamer"
           test "$(dpkg-deb -f "$deb" Architecture)" = "arm64"
-          dpkg-deb --contents "$deb" | grep -Fq "usr/bin/tmstreamer"
-          dpkg-deb --contents "$deb" | grep -Fq "usr/lib/systemd/system/tmstreamer.service"
           control="$(mktemp -d)"
           trap 'rm -rf "$control"' EXIT
+          dpkg-deb --contents "$deb" > "$control/contents"
+          grep -Fq "usr/bin/tmstreamer" "$control/contents"
+          grep -Fq "usr/lib/systemd/system/tmstreamer.service" "$control/contents"
           dpkg-deb --control "$deb" "$control"
           for script in postinst prerm postrm; do
             test -x "$control/$script"

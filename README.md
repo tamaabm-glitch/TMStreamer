@@ -4,9 +4,9 @@
 
 # TMStreamer
 
-**NEW GALIH MULTIMEDIA — Your FPV feed, on every screen.**
+**Your FPV feed, on every screen.**
 
-TMStreamer is a rebranded and modified distribution of the upstream YStreamer software. It is intended to receive DJI goggles video or USB camera input and send it to HDMI, browsers, network streams and recordings.
+TMStreamer is an independently maintained distribution based on the upstream YStreamer software. It receives DJI goggles video or USB camera input and can send it to HDMI, browsers, network streams and recordings.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-2563eb.svg?style=flat-square)](LICENSE)
 [![ARM64](https://img.shields.io/badge/Target-ARM64-blue?style=flat-square)](https://github.com/tamaabm-glitch/TMStreamer/actions)
@@ -72,4 +72,4 @@ The upstream README acknowledges CosmoStreamer as inspiration and documents DJI 
 
 ## License
 
-The upstream code is distributed under GNU GPL version 3.0 (GPL-3.0-only), as indicated by package metadata and the accompanying LICENSE. Modified distributions must continue to meet applicable GPL source, notice and license requirements. Preserve all applicable copyright notices.
+The upstream code is distributed under GNU General Public License version 3.0 (GPL-3.0-only), as indicated by package metadata and the accompanying LICENSE. Modified distributions must continue to meet applicable GPL source, notice and license requirements. Preserve all applicable copyright notices.

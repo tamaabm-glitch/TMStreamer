@@ -40,15 +40,28 @@
         <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
           TMStreamer License
         </p>
-        <h1 class="text-xl font-semibold text-fg">Aktivasi diperlukan</h1>
+        {#if license.licensed}
+          <h1 class="text-xl font-semibold text-fg">Fitur tidak termasuk paket</h1>
+        {:else}
+          <h1 class="text-xl font-semibold text-fg">Aktivasi diperlukan</h1>
+        {/if}
       </div>
     </div>
 
-    <p class="text-sm leading-6 text-muted">
-      Masukkan file lisensi resmi yang diterbitkan untuk perangkat ini.
-      Fitur Recording dan Streaming akan terbuka setelah tanda tangan lisensi
-      berhasil diverifikasi.
-    </p>
+    {#if license.licensed}
+      <p class="text-sm leading-6 text-muted">
+        Lisensi {license.status?.tier ?? ""} sudah aktif, tetapi paket ini belum
+        mencakup fitur yang sedang dibuka. Fitur aktif:
+        {license.status?.features.join(", ") || "tidak ada"}.
+        Unggah lisensi dengan hak fitur yang sesuai untuk memperbarui paket perangkat.
+      </p>
+    {:else}
+      <p class="text-sm leading-6 text-muted">
+        Masukkan file lisensi resmi yang diterbitkan untuk perangkat ini.
+        Fitur yang tercantum dalam lisensi akan terbuka setelah tanda tangan
+        digital berhasil diverifikasi.
+      </p>
+    {/if}
 
     <div class="mt-6 rounded-xl border border-line bg-surface-2 p-4">
       <div class="mb-2 flex items-center gap-2 text-sm font-medium text-fg">
@@ -94,7 +107,7 @@
         class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Upload class="h-4 w-4" aria-hidden="true" />
-        {license.activating ? "Memverifikasi lisensi…" : "Aktifkan TMStreamer"}
+        {license.activating ? "Memverifikasi lisensi…" : license.licensed ? "Perbarui lisensi TMStreamer" : "Aktifkan TMStreamer"}
       </button>
     </div>
 

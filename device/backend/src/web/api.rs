@@ -57,6 +57,43 @@ pub struct Services {
     pub legacy: Arc<crate::input::legacy::LegacySource>,
 }
 
+impl Services {
+    /// Start or stop licensed features without touching the DJI input or HDMI path.
+    pub fn apply_entitlements(&self) {
+        let cfg = self.store.get();
+        let status = self.license.status();
+        let streaming = status.licensed && status.features.iter().any(|f| f == "streaming");
+        let recording = status.licensed && status.features.iter().any(|f| f == "recording");
+
+        let mut rtsp = cfg.rtsp.clone();
+        rtsp.enabled &= streaming;
+        if let Err(error) = self.rtsp.apply(&rtsp) {
+            eprintln!("[license] RTSP not started: {error}");
+        }
+
+        let mut srt = cfg.srt.clone();
+        srt.enabled &= streaming;
+        if let Err(error) = self.srt.apply(&srt) {
+            eprintln!("[license] SRT not started: {error}");
+        }
+
+        let mut rtmp = cfg.rtmp.clone();
+        rtmp.enabled &= streaming;
+        self.rtmp.apply(&rtmp);
+
+        let mut udp = cfg.udp.clone();
+        udp.enabled &= streaming;
+        if let Err(error) = self.udp.apply(&udp) {
+            eprintln!("[license] UDP not started: {error}");
+        }
+
+        self.recorder.set_enabled(recording);
+        let mut button = cfg.recording.button.clone();
+        button.enabled &= recording;
+        self.button.configure(&button);
+    }
+}
+
 pub fn router<S>(services: Services) -> Router<S> {
     let public = Router::new()
         .route("/auth", get(access::auth_status))

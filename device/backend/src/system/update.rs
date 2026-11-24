@@ -190,12 +190,22 @@ fn validate_release_package_url(url: &str) -> Result<(), String> {
     let asset = url
         .strip_prefix(OFFICIAL_PACKAGE_PREFIX)
         .ok_or("TMStreamer packages must be downloaded from official GitHub Releases")?;
-    if asset.is_empty()
-        || !asset.ends_with(".deb")
-        || asset.contains("..")
-        || asset.contains('?')
-        || asset.contains('#')
-        || asset.contains('\\')
+    let mut parts = asset.split('/');
+    let tag = parts.next().unwrap_or_default();
+    let filename = parts.next().unwrap_or_default();
+    let safe_component = |value: &str| {
+        !value.is_empty()
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+            && !value.contains("..")
+    };
+    if parts.next().is_some()
+        || !tag.starts_with('v')
+        || !safe_component(tag)
+        || !filename.starts_with("tmstreamer_")
+        || !filename.ends_with(".deb")
+        || !safe_component(filename)
     {
         return Err("The GitHub Release package URL is invalid".into());
     }

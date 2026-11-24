@@ -1,12 +1,13 @@
 use axum::{
     Json,
+    body::Bytes,
     extract::Request,
     http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+use std::{io::Write, os::unix::fs::OpenOptionsExt, path::{Path, PathBuf}, process::Command};
 
 const DEFAULT_ROOT: &str = "/data/opt/tm-lic";
 
@@ -54,16 +55,22 @@ impl LicenseStatus {
 
 /// Runs the authoritative TM-LIC verifier. The device service runs as root,
 /// which is required to read the protected machine identity and key registry.
-fn verify() -> LicenseStatus {
+fn verify_at(license_path: Option<&Path>) -> LicenseStatus {
     let root = std::env::var("TM_LIC_ROOT").unwrap_or_else(|_| DEFAULT_ROOT.into());
     let output = Command::new(
         std::env::var("TM_LIC_PYTHON").unwrap_or_else(|_| "/usr/bin/python3".into()),
     )
     .arg("-m")
     .arg("app.cli")
-    .arg("status")
-    .env("PYTHONPATH", &root)
-    .output();
+    .arg("status");
+    let mut command = Command::new(
+        std::env::var("TM_LIC_PYTHON").unwrap_or_else(|_| "/usr/bin/python3".into()),
+    );
+    command.arg("-m").arg("app.cli").arg("status");
+    if let Some(path) = license_path {
+        command.arg("--license").arg(path);
+    }
+    let output = command.env("PYTHONPATH", &root).output();
 
     let output = match output {
         Ok(output) => output,
@@ -101,7 +108,7 @@ fn verify() -> LicenseStatus {
 }
 
 pub async fn status() -> Json<LicenseStatus> {
-    Json(tokio::task::spawn_blocking(verify).await.unwrap_or_else(|error| {
+    Json(tokio::task::spawn_blocking(|| verify_at(None)).await.unwrap_or_else(|error| {
         LicenseStatus::unverified(format!("TM-LIC verification task failed: {error}"))
     }))
 }
@@ -136,4 +143,49 @@ pub async fn streaming_only(req: Request, next: Next) -> Response {
 
 pub async fn recording_only(req: Request, next: Next) -> Response {
     require("recording", req, next).await
+}
+
+/// Accepts only a signed, machine-bound TM-LIC license document. The verifier
+/// validates the temporary file before it can replace the installed license.
+pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
+    if body.is_empty() || body.len() > 64 * 1024 {
+        return Err((StatusCode::BAD_REQUEST, "License file must be between 1 byte and 64 KiB").into_response());
+    }
+    let result = tokio::task::spawn_blocking(move || -> Result<LicenseStatus, String> {
+        let final_path = PathBuf::from("/data/state/tm-lic/licenses/TMStreamer-LICENSE.json");
+        let parent = final_path.parent().ok_or("Invalid TM-LIC license path")?;
+        std::fs::create_dir_all(parent).map_err(|e| format!("Cannot prepare TM-LIC license directory: {e}"))?;
+        let temp_path = parent.join(format!(".TMStreamer-LICENSE.{}.tmp", std::process::id()));
+        let mut file = std::fs::OpenOptions::new()
+            .write(true).create_new(true).mode(0o600).open(&temp_path)
+            .map_err(|e| format!("Cannot stage license file: {e}"))?;
+        if let Err(error) = file.write_all(&body).and_then(|_| file.sync_all()) {
+            let _ = std::fs::remove_file(&temp_path);
+            return Err(format!("Cannot write license file: {error}"));
+        }
+        drop(file);
+
+        let verified = verify_at(Some(&temp_path));
+        let valid = verified.product == "TMSTREAMER"
+            && verified.license_system == "TM-LIC"
+            && verified.activated
+            && verified.status == "LICENSED";
+        if !valid {
+            let _ = std::fs::remove_file(&temp_path);
+            return Err(if verified.message.is_empty() {
+                "License signature or device binding could not be verified.".into()
+            } else {
+                verified.message
+            });
+        }
+
+        std::fs::rename(&temp_path, &final_path)
+            .map_err(|e| format!("Cannot install verified TM-LIC license: {e}"))?;
+        if let Ok(directory) = std::fs::File::open(parent) {
+            let _ = directory.sync_all();
+        }
+        Ok(verified)
+    }).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("TM-LIC activation failed: {e}")).into_response())?;
+
+    result.map(Json).map_err(|message| (StatusCode::UNPROCESSABLE_ENTITY, message).into_response())
 }

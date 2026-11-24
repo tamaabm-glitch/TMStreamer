@@ -68,7 +68,9 @@
     <LoginForm reason="This device is password protected." />
   </StartupScreen>
 {:else if !license.loaded}
-  <StartupScreen />
+  <StartupScreen>
+    <p class="text-sm text-muted">Checking TMStreamer license…</p>
+  </StartupScreen>
 {:else if !license.licensed && !isSetupPage}
   <StartupScreen>
     <LicensePage />

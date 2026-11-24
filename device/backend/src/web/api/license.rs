@@ -7,9 +7,20 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-use std::{io::Write, os::unix::fs::OpenOptionsExt, path::{Path, PathBuf}, process::Command};
+use std::{
+    io::Write,
+    os::unix::fs::{OpenOptionsExt, PermissionsExt},
+    path::{Path, PathBuf},
+    process::Command,
+    sync::{Mutex, OnceLock},
+    time::{Duration, Instant},
+};
 
 const DEFAULT_ROOT: &str = "/data/opt/tm-lic";
+const LICENSE_PATH: &str = "/data/state/tm-lic/licenses/TMStreamer-LICENSE.json";
+const FEATURE_CACHE_TTL: Duration = Duration::from_secs(3);
+
+static FEATURE_CACHE: OnceLock<Mutex<Option<(Instant, LicenseStatus)>>> = OnceLock::new();
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct LicenseStatus {
@@ -61,9 +72,11 @@ fn verify_at(license_path: Option<&Path>) -> LicenseStatus {
         std::env::var("TM_LIC_PYTHON").unwrap_or_else(|_| "/usr/bin/python3".into()),
     );
     command.arg("-m").arg("app.cli").arg("status");
-    if let Some(path) = license_path {
-        command.arg("--license").arg(path);
-    }
+    // Use the same authoritative file for status checks and activation.
+    // Do not depend on a CLI default that may point at a different location.
+    command
+        .arg("--license")
+        .arg(license_path.unwrap_or_else(|| Path::new(LICENSE_PATH)));
     let output = command.env("PYTHONPATH", &root).output();
 
     let output = match output {
@@ -113,8 +126,27 @@ async fn checked_status() -> LicenseStatus {
     })
 }
 
+/// A short cache keeps per-frame fan-out checks cheap while making expiry or
+/// revocation effective within a few seconds. HTTP middleware still performs
+/// a fresh authoritative check for every protected request.
 pub fn feature_enabled(feature: &str) -> bool {
-    verify_at(None).allows(feature)
+    let cache = FEATURE_CACHE.get_or_init(|| Mutex::new(None));
+    let mut cached = cache.lock().unwrap();
+    if let Some((checked, status)) = cached.as_ref()
+        && checked.elapsed() < FEATURE_CACHE_TTL
+    {
+        return status.allows(feature);
+    }
+    let status = verify_at(None);
+    let allowed = status.allows(feature);
+    *cached = Some((Instant::now(), status));
+    allowed
+}
+
+fn invalidate_feature_cache() {
+    if let Some(cache) = FEATURE_CACHE.get() {
+        *cache.lock().unwrap() = None;
+    }
 }
 
 async fn require(feature: &'static str, req: Request, next: Next) -> Response {
@@ -157,6 +189,8 @@ pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
         let final_path = PathBuf::from("/data/state/tm-lic/licenses/TMStreamer-LICENSE.json");
         let parent = final_path.parent().ok_or("Invalid TM-LIC license path")?;
         std::fs::create_dir_all(parent).map_err(|e| format!("Cannot prepare TM-LIC license directory: {e}"))?;
+        std::fs::set_permissions(parent, std::fs::Permissions::from_mode(0o700))
+            .map_err(|e| format!("Cannot protect TM-LIC license directory: {e}"))?;
         let temp_path = parent.join(format!(".TMStreamer-LICENSE.{}.tmp", std::process::id()));
         let mut file = std::fs::OpenOptions::new()
             .write(true).create_new(true).mode(0o600).open(&temp_path)
@@ -186,6 +220,7 @@ pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
         if let Ok(directory) = std::fs::File::open(parent) {
             let _ = directory.sync_all();
         }
+        invalidate_feature_cache();
         Ok(verified)
     }).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("TM-LIC activation failed: {e}")).into_response())?;
 

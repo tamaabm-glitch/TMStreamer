@@ -81,13 +81,24 @@ impl Fanout {
         }
         self.splash.video(chunk, || {
             self.metrics.video(chunk);
+            // Local HDMI preview remains available without a paid entitlement.
             let _ = self.player.push(chunk);
-            self.rtsp.push(chunk);
-            self.srt.push(chunk);
-            self.rtmp.push(chunk);
-            self.udp.push(chunk);
-            self.recorder.push(chunk);
-            let _ = self.web_tx.send(chunk.to_vec());
+
+            if crate::web::api::license::feature_enabled("streaming") {
+                self.rtsp.push(chunk);
+                self.srt.push(chunk);
+                self.rtmp.push(chunk);
+                self.udp.push(chunk);
+                let _ = self.web_tx.send(chunk.to_vec());
+            }
+
+            if crate::web::api::license::feature_enabled("recording") {
+                self.recorder.push(chunk);
+            } else if self.recorder.is_active() {
+                // Stop an already-running DVR promptly if its entitlement
+                // expires or is revoked while the process remains up.
+                let _ = self.recorder.stop();
+            }
         });
         true
     }
@@ -96,12 +107,15 @@ impl Fanout {
     pub fn start_splash(self: &Arc<Self>) {
         let this = Arc::clone(self);
         self.splash.start(move |au| {
+            // HDMI splash and local display remain available without a license.
             let _ = this.player.push_au(au.to_vec());
-            this.rtsp.push(au);
-            this.srt.push(au);
-            this.rtmp.push(au);
-            this.udp.push(au);
-            let _ = this.web_tx.send(au.to_vec());
+            if crate::web::api::license::feature_enabled("streaming") {
+                this.rtsp.push(au);
+                this.srt.push(au);
+                this.rtmp.push(au);
+                this.udp.push(au);
+                let _ = this.web_tx.send(au.to_vec());
+            }
         });
     }
 }

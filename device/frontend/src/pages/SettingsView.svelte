@@ -5,6 +5,7 @@
   import InputPage from "@/pages/InputPage.svelte";
   import StreamingPage from "@/pages/StreamingPage.svelte";
   import SystemPage from "@/pages/SystemPage.svelte";
+  import LicensePage from "@/components/license/LicensePage.svelte";
   import DisplayPage from "@/pages/DisplayPage.svelte";
   import RecordingPage from "@/pages/RecordingPage.svelte";
   import PerformancePage from "@/pages/PerformancePage.svelte";
@@ -45,7 +46,9 @@
   {#if tabs.length}
     <Tabs {page} {tabs} current={tab} />
   {/if}
-  {#if settings.loadError}
+  {#if page.id === "system" && tab === "license"}
+    <LicensePage manage />
+  {:else if settings.loadError}
     <div
       class="rounded-xl border border-line bg-surface px-4 py-6 text-center shadow-sm"
     >

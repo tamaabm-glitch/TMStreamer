@@ -107,10 +107,18 @@ pub async fn status() -> Json<LicenseStatus> {
     }))
 }
 
-async fn require(feature: &'static str, req: Request, next: Next) -> Response {
-    let status = tokio::task::spawn_blocking(|| verify_at(None)).await.unwrap_or_else(|error| {
+async fn checked_status() -> LicenseStatus {
+    tokio::task::spawn_blocking(|| verify_at(None)).await.unwrap_or_else(|error| {
         LicenseStatus::unverified(format!("TM-LIC verification task failed: {error}"))
-    });
+    })
+}
+
+pub fn feature_enabled(feature: &str) -> bool {
+    verify_at(None).allows(feature)
+}
+
+async fn require(feature: &'static str, req: Request, next: Next) -> Response {
+    let status = checked_status().await;
     if status.allows(feature) {
         return next.run(req).await;
     }
@@ -182,4 +190,44 @@ pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
     }).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("TM-LIC activation failed: {e}")).into_response())?;
 
     result.map(Json).map_err(|message| (StatusCode::UNPROCESSABLE_ENTITY, message).into_response())
+}
+
+/// Protect settings that can enable paid output functions. Hardware, network,
+/// receiver, display and HDMI setup remain available without a license.
+pub async fn settings_only(req: Request, next: Next) -> Response {
+    let path = req.uri().path();
+    let required: &[&str] = if path == "/settings" && req.method() == axum::http::Method::PUT {
+        &["streaming", "recording"]
+    } else if path == "/settings/reset" {
+        &["streaming", "recording"]
+    } else if let Some(section) = path.strip_prefix("/settings/") {
+        match section {
+            "rtsp" | "srt" | "rtmp" | "udp" | "viewer" => &["streaming"],
+            "recording" => &["recording"],
+            _ => &[],
+        }
+    } else {
+        &[]
+    };
+
+    if required.is_empty() {
+        return next.run(req).await;
+    }
+    let status = checked_status().await;
+    if let Some(feature) = required.iter().find(|feature| !status.allows(feature)) {
+        let message = if status.message.is_empty() {
+            format!("Fitur {feature} memerlukan lisensi TM-LIC yang valid.")
+        } else {
+            status.message.clone()
+        };
+        return (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({
+                "error": message,
+                "license": status,
+                "required_feature": feature
+            })),
+        ).into_response();
+    }
+    next.run(req).await
 }

@@ -135,7 +135,7 @@
             <Upload class="mr-2 inline h-4 w-4" aria-hidden="true" />
             {busy ? "Memverifikasi…" : "Verifikasi & Aktivasi"}
           </button>
-          <button type="button" class={btn.secondary} disabled={loading || busy} onclick={refresh}>Periksa ulang</button>
+          <button type="button" class={btn.plain} disabled={loading || busy} onclick={refresh}>Periksa ulang</button>
         </div>
       </div>
     </div>

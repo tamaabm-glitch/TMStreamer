@@ -27,6 +27,16 @@
       !wantsLogin &&
       ["input", "network", "display", "system", "logs", "performance"].includes(page.id),
   );
+  const featureLocked = $derived(
+    page.id === "recording"
+      ? !license.canRecord
+      : page.id === "streaming" || page.id === "watch"
+        ? !license.canStream
+        : false,
+  );
+  const showLicensePage = $derived(
+    (!license.licensed && !isSetupPage) || (license.licensed && featureLocked),
+  );
 
   $effect(() => {
     if (wantsLogin && auth.loaded && auth.admin) address.go("/", true);
@@ -71,7 +81,7 @@
   <StartupScreen>
     <p class="text-sm text-muted">Checking TMStreamer license…</p>
   </StartupScreen>
-{:else if !license.licensed && !isSetupPage}
+{:else if showLicensePage}
   <StartupScreen>
     <LicensePage />
   </StartupScreen>

@@ -141,7 +141,7 @@
     {#if license.status?.message}
       <p
         role="alert"
-        class="mt-4 rounded-lg border border-down/30 bg-down/5 px-3 py-2 text-sm text-down"
+        class="mt-4 rounded-lg border border-warn/30 bg-warn/5 px-3 py-2 text-sm text-warn"
       >
         {license.status.message}
       </p>

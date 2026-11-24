@@ -4,6 +4,7 @@ mod net;
 mod output;
 mod settings;
 mod system;
+mod tm_lic;
 mod web;
 
 use std::sync::Arc;

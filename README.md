@@ -47,7 +47,7 @@ The ARM64 build produces a package named `tmstreamer`, installs `/usr/bin/tmstre
 On a compatible Debian 12 ARM64 test device, install the package only after reviewing its control scripts and dependencies:
 
 ```sh
-sudo apt install ./tmstreamer_0.1.3-1_arm64.deb
+sudo apt install ./tmstreamer_0.1.4-1_arm64.deb
 ```
 
 The package deliberately does not enable or start `tmstreamer.service`. Do not start it on the Radxa while MundoStreamer or another DJI receiver is active. Service activation is a separate, explicitly approved cutover after the DJI input, HDMI output, TM-LIC gates, and rollback procedure pass on the actual hardware. No production GitHub Release has been published, and the signed updater remains disabled. The current package is not yet certified on Radxa ROCK 3A.

@@ -59,8 +59,14 @@ jobs:
       # The web interface is compiled into the backend, so its folder has to
       # exist; what's in it is the frontend job's business
       - run: mkdir -p device/frontend/dist
-      - name: Check formatting of update module
-        run: rustfmt --edition 2024 --check device/backend/src/system/update.rs
+      - name: Check formatting of changed Rust modules
+        run: |
+          rustfmt --edition 2024 --check \
+            device/backend/src/system/update.rs \
+            device/backend/src/input.rs \
+            device/backend/src/output/recording.rs \
+            device/backend/src/output/recording.test.rs \
+            device/backend/src/web.rs
       - run: mise run backend:lint
       - run: mise run backend:test
       - name: Test offline release signing and manifest validation

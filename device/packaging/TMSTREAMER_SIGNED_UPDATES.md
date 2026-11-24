@@ -49,17 +49,22 @@ release's download base URL:
 RELEASE_TAG="v0.1.3"
 RELEASE_BASE="https://github.com/tamaabm-glitch/TMStreamer/releases/download/$RELEASE_TAG"
 sh device/packaging/manifest.sh path/to/tmstreamer_0.1.3-1_arm64.deb "$RELEASE_BASE"
+sh device/packaging/sign.sh path/to/manifest.json
 ```
 
-Upload these two files as assets to the same GitHub Release:
+Upload these three files as assets to the same GitHub Release:
 
 - `tmstreamer_0.1.3-1_arm64.deb`
 - `manifest.json`
+- `manifest.json.sig`
 
 The `.deb.sig` file is consumed by `manifest.sh`; its base64 contents are
 embedded in `manifest.json`, so it does not need to be a separate release
-asset. The generated manifest points to the versioned package URL, while
-devices use this stable manifest URL:
+asset. The manifest itself is then signed as exact raw bytes. Its detached
+signature is published as `manifest.json.sig` and must verify before the
+device parses or trusts the manifest. Both signatures use the same Ed25519
+release key. The generated manifest points to the versioned package URL,
+while devices use this stable manifest URL:
 
 `https://github.com/tamaabm-glitch/TMStreamer/releases/latest/download/manifest.json`
 
@@ -86,9 +91,12 @@ package downloads must use HTTPS.
 Before enabling this pipeline on devices, verify all of the following:
 
 - The public key in the production binary matches the private signing key.
+- The detached manifest signature verifies; changing one byte in the manifest fails.
 - A genuine TMStreamer package verifies and a one-byte-modified package fails.
 - Wrong product and wrong architecture packages are rejected.
-- The manifest and package URLs resolve over HTTPS from the target network.
+- The manifest and detached signature resolve over HTTPS from the target network.
+- Package URLs outside the official TMStreamer GitHub Releases path are rejected.
+- The package URL resolves over HTTPS from the target network.
 - The stable `releases/latest/download/manifest.json` URL resolves to the
   intended release asset, not an older source archive.
 - The manifest version matches the Debian package version.

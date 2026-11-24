@@ -90,8 +90,23 @@
   const isDirty = (p: NavPage) =>
     p.sections.some((s) => settings.dirty.includes(s));
 
-  const needsLogin = (p: NavPage) =>
-    !auth.admin && !(p.id === "license" && !license.licensed);
+  const needsLogin = (_p: NavPage) => !auth.admin;
+
+  const iconTone: Record<string, string> = {
+    watch: "text-blue-400",
+    input: "text-cyan-400",
+    streaming: "text-teal-400",
+    recording: "text-red-400",
+    display: "text-sky-300",
+    network: "text-emerald-400",
+    system: "text-violet-400",
+    performance: "text-amber-300",
+    logs: "text-slate-300",
+    terminal: "text-orange-400",
+  };
+
+  const iconClass = (p: NavPage, active: boolean) =>
+    `h-4 w-4 shrink-0 ${iconTone[p.id] ?? "text-cyan-400"} nav-icon-3d ${active ? "nav-icon-active" : "nav-icon-idle"}`;
 
   const licenseLocked = (p: NavPage) => {
     if (!license.licensed) {
@@ -102,7 +117,6 @@
         "system",
         "logs",
         "performance",
-        "license",
       ].includes(p.id);
     }
     if (p.id === "recording") return !license.canRecord;
@@ -215,7 +229,7 @@
       : 'text-muted hover:bg-surface-2/60 hover:text-fg'}"
   >
     <p.icon
-      class="h-4 w-4 shrink-0 {active ? 'text-primary' : ''}"
+      class={iconClass(p, active)}
       aria-hidden="true"
     />
     <span class="flex-1">{p.label}</span>

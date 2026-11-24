@@ -10,17 +10,9 @@ use serde::{Deserialize, Serialize};
 use crate::net::network::run;
 use crate::settings::SettingsStore;
 
-/// The upstream key is available only to legacy unit tests. Production builds
-/// must never embed or trust the vendor release key.
-#[cfg(test)]
-const PUBLIC_KEY: &str = include_str!("../../../packaging/update-key.pub");
-
-#[cfg(test)]
-fn update_public_key() -> Result<&'static str, String> {
-    Ok(PUBLIC_KEY)
-}
-
-#[cfg(not(test))]
+/// No TMStreamer release key has been provisioned on this build.
+/// Keep the production updater closed until the operator installs the
+/// TMStreamer-owned public key through the supported release configuration.
 fn update_public_key() -> Result<&'static str, String> {
     Err("TMStreamer update signing key is not configured".into())
 }

@@ -1,4 +1,5 @@
 mod access;
+mod license;
 mod display;
 mod network;
 mod recording;
@@ -35,6 +36,7 @@ use crate::web::auth::{self, Auth};
 pub struct Services {
     pub store: Arc<SettingsStore>,
     pub auth: Arc<Auth>,
+    pub license: crate::tm_lic::LicenseService,
     pub network: Arc<Network>,
     pub rtsp: Arc<RtspServer>,
     pub srt: Arc<SrtOutput>,
@@ -59,7 +61,12 @@ pub fn router<S>(services: Services) -> Router<S> {
     let public = Router::new()
         .route("/auth", get(access::auth_status))
         .route("/auth/login", post(access::login))
-        .route("/auth/logout", post(access::logout));
+        .route("/auth/logout", post(access::logout))
+        .route("/license", get(license::status))
+        .route(
+            "/license/activate",
+            post(license::activate).layer(DefaultBodyLimit::max(64 << 10)),
+        );
 
     Router::new()
         .route("/auth/password", put(access::set_password))

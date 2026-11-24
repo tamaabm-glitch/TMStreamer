@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, tm-lic-v1.2-integration]
   pull_request:
 
 concurrency:

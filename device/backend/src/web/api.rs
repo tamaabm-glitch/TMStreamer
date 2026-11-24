@@ -61,7 +61,11 @@ pub fn router<S>(services: Services) -> Router<S> {
         .route("/auth", get(access::auth_status))
         .route("/auth/login", post(access::login))
         .route("/auth/logout", post(access::logout))
-        .route("/license/status", get(license::status));
+        .route("/license/status", get(license::status))
+        .route(
+            "/license/activate",
+            post(license::activate).layer(DefaultBodyLimit::max(64 << 10)),
+        );
 
     Router::new()
         .route("/auth/password", put(access::set_password))

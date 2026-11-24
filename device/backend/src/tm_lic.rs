@@ -759,7 +759,13 @@ mod tests {
         };
         let status = service.status();
         assert!(!status.licensed);
-        assert!(status.message.as_deref().unwrap().contains("belum didaftarkan"));
+        assert!(
+            status
+                .message
+                .as_deref()
+                .unwrap()
+                .contains("belum didaftarkan")
+        );
         let _ = fs::remove_dir_all(dir);
     }
 

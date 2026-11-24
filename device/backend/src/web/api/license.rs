@@ -53,7 +53,7 @@ pub(crate) async fn enforce(
         | "/settings/udp" | "/settings/viewer"
     ) && *method == axum::http::Method::PUT {
         &["streaming"]
-    } else if matches!(path, "/offer" | "/video" | "/control") {
+    } else if matches!(path, "/offer" | "/video") {
         &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
         &["recording", "streaming"]

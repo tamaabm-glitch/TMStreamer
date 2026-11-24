@@ -282,7 +282,11 @@ fn failed_restart_restores_previous_package_and_restarts_it() {
         "restart-failed",
         &[0, 0],
         r#"{"status":"ok","version":"0.2.0"}"#,
-        &[(STAGED, "new"), (CURRENT, "old"), ("systemctl-codes", "1\n0\n")],
+        &[
+            (STAGED, "new"),
+            (CURRENT, "old"),
+            ("systemctl-codes", "1\n0\n"),
+        ],
     );
     assert_eq!(read(&dir, RESULT), REVERTED);
     assert_eq!(read(&dir, CURRENT), "old");

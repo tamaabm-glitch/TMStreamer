@@ -95,7 +95,15 @@
 
   const licenseLocked = (p: NavPage) => {
     if (!license.licensed) {
-      return !["input", "network", "display", "system", "logs", "performance", "license"].includes(p.id);
+      return ![
+        "input",
+        "network",
+        "display",
+        "system",
+        "logs",
+        "performance",
+        "license",
+      ].includes(p.id);
     }
     if (p.id === "recording") return !license.canRecord;
     if (p.id === "streaming" || p.id === "watch") return !license.canStream;
@@ -230,7 +238,9 @@
     {#if p.id !== "watch" && (needsLogin(p) || licenseLocked(p))}
       <Lock
         class="h-3.5 w-3.5 text-faint"
-        aria-label={licenseLocked(p) ? "Needs a TMStreamer license" : "Needs a login"}
+        aria-label={licenseLocked(p)
+          ? "Needs a TMStreamer license"
+          : "Needs a login"}
       />
     {/if}
   </a>

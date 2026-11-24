@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount } from "svelte";
   import { api, message } from "@/api/client";
@@ -96,8 +95,8 @@
   <Card title="SSH">
     {#if status.enabled && status.default_password}
       <p class="bg-warn/10 px-4 py-3 text-[12px] text-fg">
-        The password is still the one every TMStreamer ships with, so anyone
-        on the network can log in. Change it below.
+        The password is still the one every TMStreamer ships with, so anyone on
+        the network can log in. Change it below.
       </p>
     {/if}
 

@@ -5,12 +5,17 @@
 
 use std::{fs, path::Path};
 
-use base64::{engine::general_purpose::{STANDARD, URL_SAFE, URL_SAFE_NO_PAD}, Engine as _};
+use base64::{
+    Engine as _,
+    engine::general_purpose::{STANDARD, URL_SAFE, URL_SAFE_NO_PAD},
+};
 use ed25519_dalek::{Signature, VerifyingKey};
 use serde_json::Value;
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use time::{OffsetDateTime, format_description::well_known::Rfc3339};
 
-const PEM_PREFIX: &[u8] = &[0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00];
+const PEM_PREFIX: &[u8] = &[
+    0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00,
+];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VerifiedLicense {
@@ -22,28 +27,36 @@ pub struct VerifiedLicense {
 }
 
 fn field<'a>(value: &'a Value, key: &str) -> Result<&'a Value, String> {
-    value.get(key).ok_or_else(|| format!("Field {key} tidak ditemukan"))
+    value
+        .get(key)
+        .ok_or_else(|| format!("Field {key} tidak ditemukan"))
 }
 
 fn string_field(value: &Value, key: &str) -> Result<String, String> {
-    field(value, key)?.as_str()
+    field(value, key)?
+        .as_str()
         .filter(|s| !s.trim().is_empty())
         .map(str::to_owned)
         .ok_or_else(|| format!("Field {key} tidak valid"))
 }
 
 fn read_public_key(path: &Path) -> Result<VerifyingKey, String> {
-    let pem = fs::read_to_string(path).map_err(|e| format!("Public key tidak dapat dibaca: {e}"))?;
-    let encoded: String = pem.lines()
+    let pem =
+        fs::read_to_string(path).map_err(|e| format!("Public key tidak dapat dibaca: {e}"))?;
+    let encoded: String = pem
+        .lines()
         .filter(|line| !line.starts_with("-----"))
         .flat_map(|line| line.chars())
         .filter(|c| !c.is_whitespace())
         .collect();
-    let der = STANDARD.decode(encoded).map_err(|_| "Format PEM public key tidak valid".to_string())?;
+    let der = STANDARD
+        .decode(encoded)
+        .map_err(|_| "Format PEM public key tidak valid".to_string())?;
     if der.len() != PEM_PREFIX.len() + 32 || !der.starts_with(PEM_PREFIX) {
         return Err("Public key bukan Ed25519 SubjectPublicKeyInfo".into());
     }
-    let raw: [u8; 32] = der[PEM_PREFIX.len()..].try_into()
+    let raw: [u8; 32] = der[PEM_PREFIX.len()..]
+        .try_into()
         .map_err(|_| "Panjang public key Ed25519 tidak valid".to_string())?;
     VerifyingKey::from_bytes(&raw).map_err(|_| "Public key Ed25519 tidak valid".into())
 }
@@ -58,7 +71,7 @@ fn canonical_json(value: &Value) -> Result<Vec<u8>, String> {
             Value::Number(value) => output.push_str(&value.to_string()),
             Value::String(value) => output.push_str(
                 &serde_json::to_string(value)
-                    .map_err(|_| "String payload tidak dapat diserialisasi".to_string())?
+                    .map_err(|_| "String payload tidak dapat diserialisasi".to_string())?,
             ),
             Value::Array(values) => {
                 output.push('[');
@@ -80,7 +93,7 @@ fn canonical_json(value: &Value) -> Result<Vec<u8>, String> {
                     }
                     output.push_str(
                         &serde_json::to_string(key)
-                            .map_err(|_| "Key payload tidak dapat diserialisasi".to_string())?
+                            .map_err(|_| "Key payload tidak dapat diserialisasi".to_string())?,
                     );
                     output.push(':');
                     if let Some(item) = values.get(key) {
@@ -114,8 +127,11 @@ pub fn verify_envelope(
     }
 
     let key_id = string_field(envelope, "key_id")?;
-    if key_id == "." || key_id == ".."
-        || !key_id.chars().all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.'))
+    if key_id == "."
+        || key_id == ".."
+        || !key_id
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.'))
     {
         return Err("Key ID mengandung karakter yang tidak diizinkan".into());
     }
@@ -145,7 +161,8 @@ pub fn verify_envelope(
         return Err("Key ID lisensi bukan active key".into());
     }
 
-    let key_entry = registry.get("keys")
+    let key_entry = registry
+        .get("keys")
         .and_then(|v| v.get(&key_id))
         .ok_or_else(|| "Key ID tidak terdaftar".to_string())?;
     if key_entry.get("algorithm").and_then(Value::as_str) != Some("Ed25519")
@@ -155,13 +172,15 @@ pub fn verify_envelope(
     }
 
     let public_key = read_public_key(&public_key_dir.join(format!("{key_id}.pem")))?;
-    let signature_bytes = URL_SAFE_NO_PAD.decode(&signature_text)
+    let signature_bytes = URL_SAFE_NO_PAD
+        .decode(&signature_text)
         .or_else(|_| URL_SAFE.decode(&signature_text))
         .map_err(|_| "Encoding signature tidak valid".to_string())?;
     let signature = Signature::try_from(signature_bytes.as_slice())
         .map_err(|_| "Panjang signature tidak valid".to_string())?;
     let canonical_payload = canonical_json(payload)?;
-    public_key.verify_strict(&canonical_payload, &signature)
+    public_key
+        .verify_strict(&canonical_payload, &signature)
         .map_err(|_| "Tanda tangan digital tidak valid".to_string())?;
 
     let license_id = string_field(payload, "license_id")?;
@@ -170,10 +189,13 @@ pub fn verify_envelope(
         return Err("Tier lisensi tidak dikenal".into());
     }
     let features_value = field(payload, "features")?
-        .as_array().ok_or_else(|| "Daftar features tidak valid".to_string())?;
+        .as_array()
+        .ok_or_else(|| "Daftar features tidak valid".to_string())?;
     let mut features = Vec::with_capacity(features_value.len());
     for item in features_value {
-        let feature = item.as_str().filter(|s| !s.trim().is_empty())
+        let feature = item
+            .as_str()
+            .filter(|s| !s.trim().is_empty())
             .ok_or_else(|| "Nama feature tidak valid".to_string())?;
         if features.iter().any(|existing| existing == feature) {
             return Err("Daftar features berisi duplikasi".into());
@@ -202,9 +224,14 @@ pub fn verify_envelope(
         _ => return Err("Format kedaluwarsa tidak valid".into()),
     };
 
-    Ok(VerifiedLicense { license_id, machine_id, tier, features, expires_at })
+    Ok(VerifiedLicense {
+        license_id,
+        machine_id,
+        tier,
+        features,
+        expires_at,
+    })
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct LicenseStatus {
@@ -238,7 +265,9 @@ impl LicenseService {
             .unwrap_or_else(|| std::path::PathBuf::from("/usr/share/ystreamer/tm-lic/public_keys"));
         let registry_path = std::env::var_os("TM_LIC_REGISTRY")
             .map(std::path::PathBuf::from)
-            .unwrap_or_else(|| std::path::PathBuf::from("/usr/share/ystreamer/tm-lic/registry.json"));
+            .unwrap_or_else(|| {
+                std::path::PathBuf::from("/usr/share/ystreamer/tm-lic/registry.json")
+            });
         let machine_id = load_or_create_machine_id(&state_dir);
         Self {
             state_dir,
@@ -261,15 +290,17 @@ impl LicenseService {
     pub fn status(&self) -> LicenseStatus {
         let machine_id = match &self.machine_id {
             Ok(value) => value.clone(),
-            Err(error) => return LicenseStatus {
-                licensed: false,
-                machine_id: None,
-                license_id: None,
-                tier: None,
-                features: vec![],
-                expires_at: None,
-                message: Some(format!("Penyimpanan Machine ID bermasalah: {error}")),
-            },
+            Err(error) => {
+                return LicenseStatus {
+                    licensed: false,
+                    machine_id: None,
+                    license_id: None,
+                    tier: None,
+                    features: vec![],
+                    expires_at: None,
+                    message: Some(format!("Penyimpanan Machine ID bermasalah: {error}")),
+                };
+            }
         };
         let license_path = self.state_dir.join("license.json");
         if !license_path.is_file() {
@@ -291,9 +322,11 @@ impl LicenseService {
             }
             let envelope: Value = serde_json::from_slice(&bytes)
                 .map_err(|_| "Format JSON lisensi tidak valid".to_string())?;
-            let registry: Value = serde_json::from_slice(&fs::read(&self.registry_path)
-                .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?)
-                .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
+            let registry: Value = serde_json::from_slice(
+                &fs::read(&self.registry_path)
+                    .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?,
+            )
+            .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
             verify_envelope(&envelope, &machine_id, &registry, &self.public_key_dir)
         })();
         match result {
@@ -322,23 +355,33 @@ impl LicenseService {
         if bytes.is_empty() || bytes.len() > 65_536 {
             return Err("Ukuran file lisensi harus 1 sampai 65536 byte".into());
         }
-        let _guard = self.lock.lock().map_err(|_| "License lock poisoned".to_string())?;
+        let _guard = self
+            .lock
+            .lock()
+            .map_err(|_| "License lock poisoned".to_string())?;
         let machine_id = self.machine_id()?;
         let envelope: Value = serde_json::from_slice(bytes)
             .map_err(|_| "Format JSON lisensi tidak valid".to_string())?;
-        let registry: Value = serde_json::from_slice(&fs::read(&self.registry_path)
-            .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?)
-            .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
+        let registry: Value = serde_json::from_slice(
+            &fs::read(&self.registry_path)
+                .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?,
+        )
+        .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
         verify_envelope(&envelope, machine_id, &registry, &self.public_key_dir)?;
 
         fs::create_dir_all(&self.state_dir)
             .map_err(|e| format!("Direktori lisensi tidak dapat dibuat: {e}"))?;
         #[cfg(unix)]
-        fs::set_permissions(&self.state_dir, std::os::unix::fs::PermissionsExt::from_mode(0o700))
-            .map_err(|e| format!("Izin direktori lisensi gagal diatur: {e}"))?;
+        fs::set_permissions(
+            &self.state_dir,
+            std::os::unix::fs::PermissionsExt::from_mode(0o700),
+        )
+        .map_err(|e| format!("Izin direktori lisensi gagal diatur: {e}"))?;
 
         let destination = self.state_dir.join("license.json");
-        let temporary = self.state_dir.join(format!("license.{}.tmp", std::process::id()));
+        let temporary = self
+            .state_dir
+            .join(format!("license.{}.tmp", std::process::id()));
         let mut options = std::fs::OpenOptions::new();
         options.write(true).create_new(true);
         #[cfg(unix)]
@@ -346,7 +389,8 @@ impl LicenseService {
             use std::os::unix::fs::OpenOptionsExt;
             options.mode(0o600);
         }
-        let mut file = options.open(&temporary)
+        let mut file = options
+            .open(&temporary)
             .map_err(|e| format!("File sementara lisensi tidak dapat dibuat: {e}"))?;
         use std::io::Write;
         if let Err(error) = file.write_all(bytes).and_then(|_| file.sync_all()) {
@@ -365,10 +409,11 @@ impl LicenseService {
 fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
     let path = directory.join("machine_id");
     if path.exists() {
-        let value = fs::read_to_string(&path)
-            .map_err(|e| format!("Machine ID tidak dapat dibaca: {e}"))?;
+        let value =
+            fs::read_to_string(&path).map_err(|e| format!("Machine ID tidak dapat dibaca: {e}"))?;
         let value = value.trim().to_owned();
-        if value.len() != 35 || !value.starts_with("TM-")
+        if value.len() != 35
+            || !value.starts_with("TM-")
             || !value[3..].bytes().all(|b| b.is_ascii_hexdigit())
         {
             return Err("Machine ID tersimpan rusak; tidak akan dibuat ulang otomatis".into());
@@ -379,8 +424,11 @@ fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
     fs::create_dir_all(directory)
         .map_err(|e| format!("Direktori Machine ID tidak dapat dibuat: {e}"))?;
     #[cfg(unix)]
-    fs::set_permissions(directory, std::os::unix::fs::PermissionsExt::from_mode(0o700))
-        .map_err(|e| format!("Izin direktori Machine ID gagal diatur: {e}"))?;
+    fs::set_permissions(
+        directory,
+        std::os::unix::fs::PermissionsExt::from_mode(0o700),
+    )
+    .map_err(|e| format!("Izin direktori Machine ID gagal diatur: {e}"))?;
 
     let mut random = [0u8; 16];
     use std::io::Read;
@@ -396,7 +444,8 @@ fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    let mut file = options.open(&temporary)
+    let mut file = options
+        .open(&temporary)
         .map_err(|e| format!("Machine ID sementara tidak dapat dibuat: {e}"))?;
     use std::io::Write;
     file.write_all(value.as_bytes())
@@ -411,10 +460,12 @@ fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
         Ok(()) => Ok(value),
         Err(_) if path.exists() => {
             let _ = fs::remove_file(&temporary);
-            let existing = fs::read_to_string(&path)
-                .map_err(|e| format!("Machine ID hasil pembuatan paralel tidak dapat dibaca: {e}"))?;
+            let existing = fs::read_to_string(&path).map_err(|e| {
+                format!("Machine ID hasil pembuatan paralel tidak dapat dibaca: {e}")
+            })?;
             let existing = existing.trim().to_owned();
-            if existing.len() == 35 && existing.starts_with("TM-")
+            if existing.len() == 35
+                && existing.starts_with("TM-")
                 && existing[3..].bytes().all(|b| b.is_ascii_hexdigit())
             {
                 Ok(existing.to_ascii_uppercase())
@@ -439,7 +490,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-test-{}-{}",
             std::process::id(),
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         fs::create_dir_all(&dir).unwrap();
         let signing = SigningKey::from_bytes(&[7u8; 32]);
@@ -469,10 +523,14 @@ mod tests {
             "keys": {"test-key": {"algorithm": "Ed25519", "status": "active"}}
         });
         let der = [PEM_PREFIX, signing.verifying_key().as_bytes()].concat();
-        fs::write(dir.join("test-key.pem"), format!(
-            "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
-            STANDARD.encode(der)
-        )).unwrap();
+        fs::write(
+            dir.join("test-key.pem"),
+            format!(
+                "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
+                STANDARD.encode(der)
+            ),
+        )
+        .unwrap();
         (envelope, registry, dir)
     }
 
@@ -489,8 +547,13 @@ mod tests {
     #[test]
     fn accepts_valid_signed_license() {
         let (envelope, registry, dir) = fixture();
-        let result = verify_envelope(&envelope,
-            "TM-0123456789ABCDEF0123456789ABCDEF", &registry, &dir).unwrap();
+        let result = verify_envelope(
+            &envelope,
+            "TM-0123456789ABCDEF0123456789ABCDEF",
+            &registry,
+            &dir,
+        )
+        .unwrap();
         assert_eq!(result.tier, "PRO");
         assert_eq!(result.features, vec!["recording", "streaming"]);
         let _ = fs::remove_dir_all(dir);
@@ -500,8 +563,15 @@ mod tests {
     fn rejects_tampered_payload() {
         let (mut envelope, registry, dir) = fixture();
         envelope["payload"]["tier"] = Value::String("FREE".into());
-        assert!(verify_envelope(&envelope,
-            "TM-0123456789ABCDEF0123456789ABCDEF", &registry, &dir).is_err());
+        assert!(
+            verify_envelope(
+                &envelope,
+                "TM-0123456789ABCDEF0123456789ABCDEF",
+                &registry,
+                &dir
+            )
+            .is_err()
+        );
         let _ = fs::remove_dir_all(dir);
     }
 
@@ -509,8 +579,15 @@ mod tests {
     fn rejects_inactive_key() {
         let (envelope, mut registry, dir) = fixture();
         registry["keys"]["test-key"]["status"] = Value::String("revoked".into());
-        assert!(verify_envelope(&envelope,
-            "TM-0123456789ABCDEF0123456789ABCDEF", &registry, &dir).is_err());
+        assert!(
+            verify_envelope(
+                &envelope,
+                "TM-0123456789ABCDEF0123456789ABCDEF",
+                &registry,
+                &dir
+            )
+            .is_err()
+        );
         let _ = fs::remove_dir_all(dir);
     }
 
@@ -519,7 +596,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-python-fixture-{}-{}",
             std::process::id(),
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         fs::create_dir_all(&dir).unwrap();
         fs::write(
@@ -548,9 +628,7 @@ mod tests {
             },
             "signature": "jJEXHIWS6eaoIab0lfU9lD9TClFmTPhyiZ8ifDVCERZbCqZWCKtwUT6Y48LLiO5mfeu-NXZvdSTOUiBNM_g2BA"
         });
-        let result = verify_envelope(
-            &envelope, "TM-TEST-DEVICE-001", &registry, &dir
-        ).unwrap();
+        let result = verify_envelope(&envelope, "TM-TEST-DEVICE-001", &registry, &dir).unwrap();
         assert_eq!(result.license_id, "6fafc1cb-6d20-4b9c-b8c6-e824c95ac349");
         assert_eq!(result.tier, "PRO");
         assert_eq!(result.features, vec!["recording", "streaming"]);
@@ -562,7 +640,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-machine-id-{}-{}",
             std::process::id(),
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         let first = load_or_create_machine_id(&dir).unwrap();
         let second = load_or_create_machine_id(&dir).unwrap();
@@ -579,7 +660,10 @@ mod tests {
         let state_dir = dir.join("state");
         let registry_path = dir.join("registry.json");
         fs::write(&registry_path, serde_json::to_vec(&registry).unwrap()).unwrap();
-        let machine_id = envelope["payload"]["machine_id"].as_str().unwrap().to_owned();
+        let machine_id = envelope["payload"]["machine_id"]
+            .as_str()
+            .unwrap()
+            .to_owned();
         let service = LicenseService {
             state_dir: state_dir.clone(),
             public_key_dir: dir.clone(),
@@ -608,7 +692,10 @@ mod tests {
         let dir = std::env::temp_dir().join(format!(
             "tm-lic-corrupt-machine-id-{}-{}",
             std::process::id(),
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
         ));
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("machine_id"), "TM-BROKEN").unwrap();

@@ -9,8 +9,12 @@ class LicenseStore {
   error = $state<string | null>(null);
 
   licensed = $derived(this.status?.licensed === true);
-  canStream = $derived(this.licensed && this.status?.features.includes("streaming") === true);
-  canRecord = $derived(this.licensed && this.status?.features.includes("recording") === true);
+  canStream = $derived(
+    this.licensed && this.status?.features.includes("streaming") === true,
+  );
+  canRecord = $derived(
+    this.licensed && this.status?.features.includes("recording") === true,
+  );
   machineId = $derived(this.status?.machine_id ?? null);
 
   async load() {
@@ -34,7 +38,9 @@ class LicenseStore {
     try {
       this.status = await api.activateLicense(file);
       if (!this.status.licensed) {
-        throw new Error(this.status.message ?? "Lisensi belum dapat diaktifkan.");
+        throw new Error(
+          this.status.message ?? "Lisensi belum dapat diaktifkan.",
+        );
       }
     } catch (error) {
       this.error = message(error);

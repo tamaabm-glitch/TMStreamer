@@ -1,4 +1,3 @@
-
 @import "tailwindcss";
 
 /* =========================================
@@ -7,27 +6,27 @@
    ========================================= */
 
 @theme {
-  --color-base: #100B1D;
-  --color-surface: #1B1230;
-  --color-surface-2: #281A40;
+  --color-base: #100b1d;
+  --color-surface: #1b1230;
+  --color-surface-2: #281a40;
   --color-surface-3: #382653;
 
-  --color-line: #49336B;
-  --color-line-strong: #63478C;
+  --color-line: #49336b;
+  --color-line-strong: #63478c;
 
-  --color-fg: #F5F0FF;
-  --color-muted: #C4B5D8;
-  --color-faint: #9A88B5;
+  --color-fg: #f5f0ff;
+  --color-muted: #c4b5d8;
+  --color-faint: #9a88b5;
 
-  --color-primary: #9B5CFF;
-  --color-primary-hover: #B47AFF;
+  --color-primary: #9b5cff;
+  --color-primary-hover: #b47aff;
 
-  --color-accent: #FF8A3D;
-  --color-accent-hover: #FFA45F;
+  --color-accent: #ff8a3d;
+  --color-accent-hover: #ffa45f;
 
-  --color-ok: #4ADE80;
-  --color-warn: #FFB454;
-  --color-down: #F87171;
+  --color-ok: #4ade80;
+  --color-warn: #ffb454;
+  --color-down: #f87171;
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -44,54 +43,54 @@
 :root {
   color-scheme: dark;
 
-  --color-base: #100B1D;
-  --color-surface: #1B1230;
-  --color-surface-2: #281A40;
+  --color-base: #100b1d;
+  --color-surface: #1b1230;
+  --color-surface-2: #281a40;
   --color-surface-3: #382653;
 
-  --color-line: #49336B;
-  --color-line-strong: #63478C;
+  --color-line: #49336b;
+  --color-line-strong: #63478c;
 
-  --color-fg: #F5F0FF;
-  --color-muted: #C4B5D8;
-  --color-faint: #9A88B5;
+  --color-fg: #f5f0ff;
+  --color-muted: #c4b5d8;
+  --color-faint: #9a88b5;
 
-  --color-primary: #9B5CFF;
-  --color-primary-hover: #B47AFF;
+  --color-primary: #9b5cff;
+  --color-primary-hover: #b47aff;
 
-  --color-accent: #FF8A3D;
-  --color-accent-hover: #FFA45F;
+  --color-accent: #ff8a3d;
+  --color-accent-hover: #ffa45f;
 
-  --color-ok: #4ADE80;
-  --color-warn: #FFB454;
-  --color-down: #F87171;
+  --color-ok: #4ade80;
+  --color-warn: #ffb454;
+  --color-down: #f87171;
 }
 
 /* Explicit dark theme */
 :root.dark {
   color-scheme: dark;
 
-  --color-base: #100B1D;
-  --color-surface: #1B1230;
-  --color-surface-2: #281A40;
+  --color-base: #100b1d;
+  --color-surface: #1b1230;
+  --color-surface-2: #281a40;
   --color-surface-3: #382653;
 
-  --color-line: #49336B;
-  --color-line-strong: #63478C;
+  --color-line: #49336b;
+  --color-line-strong: #63478c;
 
-  --color-fg: #F5F0FF;
-  --color-muted: #C4B5D8;
-  --color-faint: #9A88B5;
+  --color-fg: #f5f0ff;
+  --color-muted: #c4b5d8;
+  --color-faint: #9a88b5;
 
-  --color-primary: #9B5CFF;
-  --color-primary-hover: #B47AFF;
+  --color-primary: #9b5cff;
+  --color-primary-hover: #b47aff;
 
-  --color-accent: #FF8A3D;
-  --color-accent-hover: #FFA45F;
+  --color-accent: #ff8a3d;
+  --color-accent-hover: #ffa45f;
 
-  --color-ok: #4ADE80;
-  --color-warn: #FFB454;
-  --color-down: #F87171;
+  --color-ok: #4ade80;
+  --color-warn: #ffb454;
+  --color-down: #f87171;
 }
 
 /* =========================================
@@ -101,27 +100,27 @@
 :root.light {
   color-scheme: light;
 
-  --color-base: #F8F5FC;
-  --color-surface: #FFFFFF;
-  --color-surface-2: #F0EAF8;
-  --color-surface-3: #E4D9F2;
+  --color-base: #f8f5fc;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0eaf8;
+  --color-surface-3: #e4d9f2;
 
-  --color-line: #DDD0EB;
-  --color-line-strong: #C6B2DD;
+  --color-line: #ddd0eb;
+  --color-line-strong: #c6b2dd;
 
   --color-fg: #241634;
-  --color-muted: #705D85;
-  --color-faint: #9785A9;
+  --color-muted: #705d85;
+  --color-faint: #9785a9;
 
-  --color-primary: #7C3AED;
-  --color-primary-hover: #6D28D9;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
 
-  --color-accent: #EA580C;
-  --color-accent-hover: #C2410C;
+  --color-accent: #ea580c;
+  --color-accent-hover: #c2410c;
 
-  --color-ok: #16A34A;
-  --color-warn: #D97706;
-  --color-down: #DC2626;
+  --color-ok: #16a34a;
+  --color-warn: #d97706;
+  --color-down: #dc2626;
 }
 
 /* =========================================

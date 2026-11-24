@@ -30,20 +30,118 @@
     Math.abs(r - Math.round(r)) < 0.02 ? String(Math.round(r)) : r.toFixed(2);
 
   const PRESETS = [
-    { id: "1280x720@50.00", width: 1280, height: 720, refresh: 50, interlaced: false, label: "720p50" },
-    { id: "1280x720@59.94", width: 1280, height: 720, refresh: 59.94, interlaced: false, label: "720p59.94" },
-    { id: "1280x720@60.00", width: 1280, height: 720, refresh: 60, interlaced: false, label: "720p60" },
-    { id: "1920x1080i@50.00", width: 1920, height: 1080, refresh: 50, interlaced: true, label: "1080i50" },
-    { id: "1920x1080i@59.94", width: 1920, height: 1080, refresh: 59.94, interlaced: true, label: "1080i59.94" },
-    { id: "1920x1080i@60.00", width: 1920, height: 1080, refresh: 60, interlaced: true, label: "1080i60" },
-    { id: "1920x1080@23.98", width: 1920, height: 1080, refresh: 23.98, interlaced: false, label: "1080p23.98" },
-    { id: "1920x1080@24.00", width: 1920, height: 1080, refresh: 24, interlaced: false, label: "1080p24" },
-    { id: "1920x1080@25.00", width: 1920, height: 1080, refresh: 25, interlaced: false, label: "1080p25" },
-    { id: "1920x1080@29.97", width: 1920, height: 1080, refresh: 29.97, interlaced: false, label: "1080p29.97" },
-    { id: "1920x1080@30.00", width: 1920, height: 1080, refresh: 30, interlaced: false, label: "1080p30" },
-    { id: "1920x1080@50.00", width: 1920, height: 1080, refresh: 50, interlaced: false, label: "1080p50" },
-    { id: "1920x1080@59.94", width: 1920, height: 1080, refresh: 59.94, interlaced: false, label: "1080p59.94" },
-    { id: "1920x1080@60.00", width: 1920, height: 1080, refresh: 60, interlaced: false, label: "1080p60" },
+    {
+      id: "1280x720@50.00",
+      width: 1280,
+      height: 720,
+      refresh: 50,
+      interlaced: false,
+      label: "720p50",
+    },
+    {
+      id: "1280x720@59.94",
+      width: 1280,
+      height: 720,
+      refresh: 59.94,
+      interlaced: false,
+      label: "720p59.94",
+    },
+    {
+      id: "1280x720@60.00",
+      width: 1280,
+      height: 720,
+      refresh: 60,
+      interlaced: false,
+      label: "720p60",
+    },
+    {
+      id: "1920x1080i@50.00",
+      width: 1920,
+      height: 1080,
+      refresh: 50,
+      interlaced: true,
+      label: "1080i50",
+    },
+    {
+      id: "1920x1080i@59.94",
+      width: 1920,
+      height: 1080,
+      refresh: 59.94,
+      interlaced: true,
+      label: "1080i59.94",
+    },
+    {
+      id: "1920x1080i@60.00",
+      width: 1920,
+      height: 1080,
+      refresh: 60,
+      interlaced: true,
+      label: "1080i60",
+    },
+    {
+      id: "1920x1080@23.98",
+      width: 1920,
+      height: 1080,
+      refresh: 23.98,
+      interlaced: false,
+      label: "1080p23.98",
+    },
+    {
+      id: "1920x1080@24.00",
+      width: 1920,
+      height: 1080,
+      refresh: 24,
+      interlaced: false,
+      label: "1080p24",
+    },
+    {
+      id: "1920x1080@25.00",
+      width: 1920,
+      height: 1080,
+      refresh: 25,
+      interlaced: false,
+      label: "1080p25",
+    },
+    {
+      id: "1920x1080@29.97",
+      width: 1920,
+      height: 1080,
+      refresh: 29.97,
+      interlaced: false,
+      label: "1080p29.97",
+    },
+    {
+      id: "1920x1080@30.00",
+      width: 1920,
+      height: 1080,
+      refresh: 30,
+      interlaced: false,
+      label: "1080p30",
+    },
+    {
+      id: "1920x1080@50.00",
+      width: 1920,
+      height: 1080,
+      refresh: 50,
+      interlaced: false,
+      label: "1080p50",
+    },
+    {
+      id: "1920x1080@59.94",
+      width: 1920,
+      height: 1080,
+      refresh: 59.94,
+      interlaced: false,
+      label: "1080p59.94",
+    },
+    {
+      id: "1920x1080@60.00",
+      width: 1920,
+      height: 1080,
+      refresh: 60,
+      interlaced: false,
+      label: "1080p60",
+    },
   ];
 
   const modes = $derived.by(() => {
@@ -63,7 +161,9 @@
 
       return {
         value: found?.id ?? preset.id,
-        label: found ? preset.label : `${preset.label} (not supported by this screen)`,
+        label: found
+          ? preset.label
+          : `${preset.label} (not supported by this screen)`,
         disabled: !found,
       };
     });

@@ -83,7 +83,5 @@
     {busy ? "Checking…" : "Log in"}
   </button>
 
-  <p class="pt-2 text-center text-[10px] text-muted">
-    TMStreamer
-  </p>
+  <p class="pt-2 text-center text-[10px] text-muted">TMStreamer</p>
 </form>

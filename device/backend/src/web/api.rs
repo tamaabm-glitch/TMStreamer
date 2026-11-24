@@ -1,6 +1,6 @@
 mod access;
-pub(crate) mod license;
 mod display;
+pub(crate) mod license;
 mod network;
 mod recording;
 mod settings;
@@ -66,7 +66,8 @@ impl Services {
         let status = self.license.status();
         let streaming = status.licensed && status.features.iter().any(|f| f == "streaming");
         let recording = status.licensed && status.features.iter().any(|f| f == "recording");
-        self.streaming_enabled.store(streaming, std::sync::atomic::Ordering::Relaxed);
+        self.streaming_enabled
+            .store(streaming, std::sync::atomic::Ordering::Relaxed);
 
         let mut rtsp = cfg.rtsp.clone();
         rtsp.enabled &= streaming;

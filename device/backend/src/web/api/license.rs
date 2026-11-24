@@ -1,8 +1,8 @@
 use axum::{
+    Json,
     body::Bytes,
     extract::State,
     http::{HeaderMap, StatusCode},
-    Json,
 };
 
 use crate::tm_lic::LicenseStatus;
@@ -59,10 +59,15 @@ pub(crate) async fn enforce(
         &["recording"]
     } else if path == "/settings/recording" && *method == axum::http::Method::PUT {
         &["recording"]
-    } else if matches!(path,
-        "/settings/rtsp" | "/settings/srt" | "/settings/rtmp"
-        | "/settings/udp" | "/settings/viewer"
-    ) && *method == axum::http::Method::PUT {
+    } else if matches!(
+        path,
+        "/settings/rtsp"
+            | "/settings/srt"
+            | "/settings/rtmp"
+            | "/settings/udp"
+            | "/settings/viewer"
+    ) && *method == axum::http::Method::PUT
+    {
         &["streaming"]
     } else if matches!(path, "/offer" | "/video") {
         &["streaming"]
@@ -75,14 +80,24 @@ pub(crate) async fn enforce(
     for feature in required_features {
         if !license.has_feature(feature) {
             let (message, code) = if license.status().licensed {
-                ("Fitur ini tidak termasuk dalam lisensi aktif", "feature_not_licensed")
+                (
+                    "Fitur ini tidak termasuk dalam lisensi aktif",
+                    "feature_not_licensed",
+                )
             } else {
-                ("Aktifkan lisensi TMStreamer untuk menggunakan fitur ini", "license_required")
+                (
+                    "Aktifkan lisensi TMStreamer untuk menggunakan fitur ini",
+                    "license_required",
+                )
             };
             return (
                 StatusCode::FORBIDDEN,
-                axum::Json(LicenseRequired { error: message, code }),
-            ).into_response();
+                axum::Json(LicenseRequired {
+                    error: message,
+                    code,
+                }),
+            )
+                .into_response();
         }
     }
 

@@ -25,7 +25,9 @@
   const isSetupPage = $derived(
     !license.licensed &&
       !wantsLogin &&
-      ["input", "network", "display", "system", "logs", "performance"].includes(page.id),
+      ["input", "network", "display", "system", "logs", "performance"].includes(
+        page.id,
+      ),
   );
   const featureLocked = $derived(
     page.id === "recording"

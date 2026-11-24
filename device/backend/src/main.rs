@@ -132,6 +132,7 @@ fn run() -> anyhow::Result<()> {
         store: Arc::clone(&store),
         auth,
         license,
+        streaming_enabled: Arc::new(std::sync::atomic::AtomicBool::new(streaming_licensed)),
         network: Arc::clone(&network),
         rtsp: Arc::clone(&rtsp_server),
         srt: Arc::clone(&srt),

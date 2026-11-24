@@ -457,6 +457,35 @@ mod tests {
     }
 
     #[test]
+    fn machine_id_is_persistent_and_well_formed() {
+        let dir = std::env::temp_dir().join(format!(
+            "tm-lic-machine-id-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        let first = load_or_create_machine_id(&dir).unwrap();
+        let second = load_or_create_machine_id(&dir).unwrap();
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 35);
+        assert!(first.starts_with("TM-"));
+        assert!(first[3..].bytes().all(|b| b.is_ascii_hexdigit()));
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn corrupt_machine_id_is_not_silently_replaced() {
+        let dir = std::env::temp_dir().join(format!(
+            "tm-lic-corrupt-machine-id-{}-{}",
+            std::process::id(),
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("machine_id"), "TM-BROKEN").unwrap();
+        assert!(load_or_create_machine_id(&dir).is_err());
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
     fn rejects_wrong_device() {
         let (envelope, registry, dir) = fixture();
         assert!(verify_envelope(&envelope, "TM-OTHER", &registry, &dir).is_err());

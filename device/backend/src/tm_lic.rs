@@ -99,8 +99,7 @@ fn canonical_json(value: &Value) -> Result<Vec<u8>, String> {
 }
 
 /// Verify a TM-LIC envelope against the active key registry and expected device ID.
-/// serde_json's default Map is key-sorted (preserve_order is not enabled), matching
-/// Python json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=False).
+/// The canonical_json helper mirrors Python's sorted, compact UTF-8 serialization.
 pub fn verify_envelope(
     envelope: &Value,
     expected_machine_id: &str,

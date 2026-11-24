@@ -41,7 +41,22 @@ fn main() -> anyhow::Result<()> {
 
 fn run() -> anyhow::Result<()> {
     let store = Arc::new(settings::SettingsStore::load());
-    let cfg = store.get();
+    let mut cfg = store.get();
+
+    // Fail closed at startup: persisted settings must not start paid outputs
+    // until the authoritative TM-LIC verifier confirms each entitlement.
+    if !web::api::license::feature_enabled("streaming") {
+        eprintln!("[license] streaming is locked; paid output transports remain stopped");
+        cfg.rtsp.enabled = false;
+        cfg.srt.enabled = false;
+        cfg.rtmp.enabled = false;
+        cfg.udp.enabled = false;
+    }
+    if !web::api::license::feature_enabled("recording") {
+        eprintln!("[license] recording is locked; DVR auto-start and GPIO button remain disabled");
+        cfg.recording.auto_start = false;
+        cfg.recording.button.enabled = false;
+    }
 
     // Outputs first, so the web server can reconfigure them from settings
     let overlay = overlay::Overlay::load(store.path().with_file_name("overlay.png"), &cfg.overlay);

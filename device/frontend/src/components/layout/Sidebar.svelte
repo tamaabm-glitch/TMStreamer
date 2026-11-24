@@ -92,7 +92,7 @@
 
   const licenseLocked = (p: NavPage) =>
     !license.licensed &&
-    !["watch", "network", "display", "system", "logs", "performance"].includes(p.id);
+    !["input", "network", "display", "system", "logs", "performance"].includes(p.id);
 </script>
 
 <div class="flex h-full flex-col">

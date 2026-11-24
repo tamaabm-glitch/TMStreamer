@@ -196,9 +196,9 @@ pub async fn activate(body: Bytes) -> Result<Json<LicenseStatus>, Response> {
 /// receiver, display and HDMI setup remain available without a license.
 pub async fn settings_only(req: Request, next: Next) -> Response {
     let path = req.uri().path();
-    let required: &[&str] = if path == "/settings" && req.method() == axum::http::Method::PUT {
-        &["streaming", "recording"]
-    } else if path == "/settings/reset" {
+    let required: &[&str] = if (path == "/settings" && req.method() == axum::http::Method::PUT)
+        || path == "/settings/reset"
+    {
         &["streaming", "recording"]
     } else if let Some(section) = path.strip_prefix("/settings/") {
         match section {

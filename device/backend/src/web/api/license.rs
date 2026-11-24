@@ -266,3 +266,56 @@ pub async fn settings_only(req: Request, next: Next) -> Response {
     }
     next.run(req).await
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn licensed(features: &[&str]) -> LicenseStatus {
+        LicenseStatus {
+            product: "TMSTREAMER".into(),
+            license_system: "TM-LIC".into(),
+            activated: true,
+            status: "LICENSED".into(),
+            features: features.iter().map(|feature| (*feature).into()).collect(),
+            ..LicenseStatus::default()
+        }
+    }
+
+    #[test]
+    fn grants_only_explicit_tm_lic_entitlements() {
+        let status = licensed(&["streaming", "recording"]);
+        assert!(status.allows("streaming"));
+        assert!(status.allows("recording"));
+        assert!(!status.allows("camera"));
+        assert!(!status.allows("admin"));
+    }
+
+    #[test]
+    fn rejects_wrong_product_license_system_and_inactive_status() {
+        let mut status = licensed(&["streaming", "recording"]);
+        status.product = "OTHER".into();
+        assert!(!status.allows("streaming"));
+
+        let mut status = licensed(&["streaming"]);
+        status.license_system = "OTHER".into();
+        assert!(!status.allows("streaming"));
+
+        let mut status = licensed(&["streaming"]);
+        status.activated = false;
+        assert!(!status.allows("streaming"));
+
+        let mut status = licensed(&["streaming"]);
+        status.status = "EXPIRED".into();
+        assert!(!status.allows("streaming"));
+    }
+
+    #[test]
+    fn missing_entitlement_fails_closed() {
+        let status = licensed(&["streaming"]);
+        assert!(status.allows("streaming"));
+        assert!(!status.allows("recording"));
+        assert!(!LicenseStatus::unverified("verifier unavailable").allows("streaming"));
+    }
+}

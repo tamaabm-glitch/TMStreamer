@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.7
+
+- Recheck TM-LIC streaming and recording entitlements during live output, not only at service startup.
+- Stop DVR recording when its entitlement expires or is revoked; keep local HDMI preview available.
+- Use one explicit TM-LIC license file path for activation and subsequent verification.
+- Cache entitlement checks briefly to avoid spawning the verifier for every video frame.
+- Make Debian service installation passive: never enable or start TMStreamer automatically.
+
 ## 0.1.6
 
 - Use the TMStreamer theme preference during the initial page bootstrap and migrate the old theme key without losing the selected appearance.

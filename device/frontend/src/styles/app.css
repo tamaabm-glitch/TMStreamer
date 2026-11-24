@@ -2,27 +2,27 @@
 
 /* =========================================
    TMStreamer
-   DARK VIOLET THEME
+   CHARCOAL / BLUE-CYAN THEME
    ========================================= */
 
 @theme {
-  --color-base: #100b1d;
-  --color-surface: #1b1230;
-  --color-surface-2: #281a40;
-  --color-surface-3: #382653;
+  --color-base: #0b1118;
+  --color-surface: #121b25;
+  --color-surface-2: #1b2936;
+  --color-surface-3: #263747;
 
-  --color-line: #49336b;
-  --color-line-strong: #63478c;
+  --color-line: #2e4355;
+  --color-line-strong: #3e5b70;
 
-  --color-fg: #f5f0ff;
-  --color-muted: #c4b5d8;
-  --color-faint: #9a88b5;
+  --color-fg: #eaf4fb;
+  --color-muted: #a8bac8;
+  --color-faint: #72899b;
 
-  --color-primary: #9b5cff;
-  --color-primary-hover: #b47aff;
+  --color-primary: #23bfe3;
+  --color-primary-hover: #59d5f1;
 
-  --color-accent: #ff8a3d;
-  --color-accent-hover: #ffa45f;
+  --color-accent: #39d6ff;
+  --color-accent-hover: #70e3ff;
 
   --color-ok: #4ade80;
   --color-warn: #ffb454;
@@ -37,29 +37,29 @@
 }
 
 /* =========================================
-   DARK VIOLET - DEFAULT THEME
+   CHARCOAL - DEFAULT THEME
    ========================================= */
 
 :root {
   color-scheme: dark;
 
-  --color-base: #100b1d;
-  --color-surface: #1b1230;
-  --color-surface-2: #281a40;
-  --color-surface-3: #382653;
+  --color-base: #0b1118;
+  --color-surface: #121b25;
+  --color-surface-2: #1b2936;
+  --color-surface-3: #263747;
 
-  --color-line: #49336b;
-  --color-line-strong: #63478c;
+  --color-line: #2e4355;
+  --color-line-strong: #3e5b70;
 
-  --color-fg: #f5f0ff;
-  --color-muted: #c4b5d8;
-  --color-faint: #9a88b5;
+  --color-fg: #eaf4fb;
+  --color-muted: #a8bac8;
+  --color-faint: #72899b;
 
-  --color-primary: #9b5cff;
-  --color-primary-hover: #b47aff;
+  --color-primary: #23bfe3;
+  --color-primary-hover: #59d5f1;
 
-  --color-accent: #ff8a3d;
-  --color-accent-hover: #ffa45f;
+  --color-accent: #39d6ff;
+  --color-accent-hover: #70e3ff;
 
   --color-ok: #4ade80;
   --color-warn: #ffb454;
@@ -70,23 +70,23 @@
 :root.dark {
   color-scheme: dark;
 
-  --color-base: #100b1d;
-  --color-surface: #1b1230;
-  --color-surface-2: #281a40;
-  --color-surface-3: #382653;
+  --color-base: #0b1118;
+  --color-surface: #121b25;
+  --color-surface-2: #1b2936;
+  --color-surface-3: #263747;
 
-  --color-line: #49336b;
-  --color-line-strong: #63478c;
+  --color-line: #2e4355;
+  --color-line-strong: #3e5b70;
 
-  --color-fg: #f5f0ff;
-  --color-muted: #c4b5d8;
-  --color-faint: #9a88b5;
+  --color-fg: #eaf4fb;
+  --color-muted: #a8bac8;
+  --color-faint: #72899b;
 
-  --color-primary: #9b5cff;
-  --color-primary-hover: #b47aff;
+  --color-primary: #23bfe3;
+  --color-primary-hover: #59d5f1;
 
-  --color-accent: #ff8a3d;
-  --color-accent-hover: #ffa45f;
+  --color-accent: #39d6ff;
+  --color-accent-hover: #70e3ff;
 
   --color-ok: #4ade80;
   --color-warn: #ffb454;
@@ -100,23 +100,23 @@
 :root.light {
   color-scheme: light;
 
-  --color-base: #f8f5fc;
+  --color-base: #f2f7fa;
   --color-surface: #ffffff;
-  --color-surface-2: #f0eaf8;
-  --color-surface-3: #e4d9f2;
+  --color-surface-2: #eaf2f7;
+  --color-surface-3: #dce8f0;
 
-  --color-line: #ddd0eb;
-  --color-line-strong: #c6b2dd;
+  --color-line: #cbd9e3;
+  --color-line-strong: #a9c0d0;
 
-  --color-fg: #241634;
-  --color-muted: #705d85;
-  --color-faint: #9785a9;
+  --color-fg: #152a38;
+  --color-muted: #4d6474;
+  --color-faint: #718697;
 
-  --color-primary: #7c3aed;
-  --color-primary-hover: #6d28d9;
+  --color-primary: #079ac0;
+  --color-primary-hover: #067b9b;
 
-  --color-accent: #ea580c;
-  --color-accent-hover: #c2410c;
+  --color-accent: #0ea5e9;
+  --color-accent-hover: #0284c7;
 
   --color-ok: #16a34a;
   --color-warn: #d97706;
@@ -254,4 +254,29 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+
+/* Context-colored navigation icons with a subtle dimensional edge and active glow. */
+.nav-icon-3d {
+  filter:
+    drop-shadow(0 1px 0 rgb(255 255 255 / 0.22))
+    drop-shadow(0 2px 2px rgb(0 0 0 / 0.55));
+  transition:
+    filter 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.nav-icon-idle {
+  opacity: 0.78;
+}
+
+.nav-icon-active {
+  opacity: 1;
+  transform: translateY(-1px);
+  filter:
+    drop-shadow(0 0 5px currentColor)
+    drop-shadow(0 1px 0 rgb(255 255 255 / 0.28))
+    drop-shadow(0 2px 2px rgb(0 0 0 / 0.6));
 }

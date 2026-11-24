@@ -96,8 +96,9 @@ impl Fanout {
                 self.recorder.push(chunk);
             } else if self.recorder.is_active() {
                 // Stop an already-running DVR promptly if its entitlement
-                // expires or is revoked while the process remains up.
-                let _ = self.recorder.stop();
+                // expires or is revoked while the process remains up, while
+                // preserving Auto Record for a later valid activation.
+                self.recorder.stop_for_license();
             }
         });
         true

@@ -409,7 +409,7 @@ fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
     drop(file);
     match fs::rename(&temporary, &path) {
         Ok(()) => Ok(value),
-        Err(error) if path.exists() => {
+        Err(_) if path.exists() => {
             let _ = fs::remove_file(&temporary);
             let existing = fs::read_to_string(&path)
                 .map_err(|e| format!("Machine ID hasil pembuatan paralel tidak dapat dibaca: {e}"))?;

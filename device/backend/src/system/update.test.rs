@@ -168,7 +168,7 @@ fn manifest_reads_without_notes() {
 fn run_script(name: &str, apt: &[u8], health: &str, before: &[(&str, &str)]) -> std::path::PathBuf {
     use std::os::unix::fs::PermissionsExt;
 
-    let dir = std::env::temp_dir().join(format!("ystreamer-update-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tmstreamer-update-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     let bin = dir.join("bin");
     fs::create_dir_all(&bin).unwrap();
@@ -178,6 +178,9 @@ fn run_script(name: &str, apt: &[u8], health: &str, before: &[(&str, &str)]) -> 
     let codes: Vec<String> = apt.iter().map(u8::to_string).collect();
     fs::write(dir.join("apt-codes"), codes.join("\n") + "\n").unwrap();
     fs::write(dir.join("health"), health).unwrap();
+    if !dir.join("systemctl-codes").exists() {
+        fs::write(dir.join("systemctl-codes"), "0\n0\n").unwrap();
+    }
     let stubs = [
         (
             "apt-get",
@@ -185,6 +188,10 @@ fn run_script(name: &str, apt: &[u8], health: &str, before: &[(&str, &str)]) -> 
         ),
         ("curl", "cat health"),
         ("sleep", "true"),
+        (
+            "systemctl",
+            "echo \"$@\" >>systemctl-calls\ncode=$(head -1 systemctl-codes); sed -i 1d systemctl-codes; exit $code",
+        ),
     ];
     for (stub, body) in stubs {
         let path = bin.join(stub);
@@ -224,6 +231,7 @@ fn version_that_answers_is_kept() {
     assert_eq!(read(&dir, PREVIOUS), "old");
     assert!(!dir.join(STAGED).exists());
     assert_eq!(read(&dir, "apt-calls").lines().count(), 1);
+    assert_eq!(read(&dir, "systemctl-calls"), "restart tmstreamer.service");
 }
 
 #[test]
@@ -235,6 +243,7 @@ fn version_that_never_answers_is_replaced_by_the_one_before() {
     assert!(!dir.join(PREVIOUS).exists());
     let calls = read(&dir, "apt-calls");
     assert!(calls.lines().nth(1).unwrap().ends_with(CURRENT), "{calls}");
+    assert_eq!(read(&dir, "systemctl-calls").lines().count(), 2);
 }
 
 #[test]
@@ -246,6 +255,7 @@ fn old_version_still_answering_is_not_taken_for_the_new_one() {
         RUNNING,
     );
     assert_eq!(read(&dir, RESULT), REVERTED);
+    assert_eq!(read(&dir, "systemctl-calls").lines().count(), 2);
 }
 
 #[test]
@@ -253,6 +263,7 @@ fn nothing_to_go_back_to_is_reported() {
     let dir = run_script("first", &[0], "", &[(STAGED, "new")]);
     assert_eq!(read(&dir, RESULT), UNANSWERED);
     assert_eq!(read(&dir, "apt-calls").lines().count(), 1);
+    assert_eq!(read(&dir, "systemctl-calls").lines().count(), 1);
 }
 
 #[test]
@@ -262,6 +273,22 @@ fn failed_install_changes_nothing() {
     assert_eq!(read(&dir, CURRENT), "old");
     assert_eq!(read(&dir, STAGED), "new");
     assert_eq!(read(&dir, "apt-calls").lines().count(), 1);
+    assert!(!dir.join("systemctl-calls").exists());
+}
+
+#[test]
+fn failed_restart_restores_previous_package_and_restarts_it() {
+    let dir = run_script(
+        "restart-failed",
+        &[0, 0],
+        r#"{"status":"ok","version":"0.2.0"}"#,
+        &[(STAGED, "new"), (CURRENT, "old"), ("systemctl-codes", "1\n0\n")],
+    );
+    assert_eq!(read(&dir, RESULT), REVERTED);
+    assert_eq!(read(&dir, CURRENT), "old");
+    assert_eq!(read(&dir, STAGED), "new");
+    assert_eq!(read(&dir, "apt-calls").lines().count(), 2);
+    assert_eq!(read(&dir, "systemctl-calls").lines().count(), 2);
 }
 
 #[test]

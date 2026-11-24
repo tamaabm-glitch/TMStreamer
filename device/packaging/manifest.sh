@@ -11,13 +11,28 @@ fi
 DEB=$1
 BASE=${2%/}
 CHANGELOG=$(dirname "$0")/../../CHANGELOG.md
+PACKAGE_NAME=$(dpkg-deb -f "$DEB" Package)
 VERSION=$(dpkg-deb -f "$DEB" Version)
 ARCH=$(dpkg-deb -f "$DEB" Architecture)
 PACKAGE_VERSION=${VERSION%-*}
 FILENAME=$(basename "$DEB")
 EXPECTED_BASE="https://github.com/tamaabm-glitch/TMStreamer/releases/download/v$PACKAGE_VERSION"
+EXPECTED_FILENAME="tmstreamer_${VERSION}_${ARCH}.deb"
 OUT=$(dirname "$DEB")/manifest.json
 TMP="$OUT.tmp"
+
+if [ "$PACKAGE_NAME" != "tmstreamer" ]; then
+    echo "Debian package must be named tmstreamer, got: $PACKAGE_NAME" >&2
+    exit 1
+fi
+if [ "$ARCH" != "arm64" ]; then
+    echo "Only ARM64 packages can be published by this manifest generator." >&2
+    exit 1
+fi
+if [ "$FILENAME" != "$EXPECTED_FILENAME" ]; then
+    echo "Package filename must exactly match: $EXPECTED_FILENAME" >&2
+    exit 1
+fi
 
 case "$PACKAGE_VERSION" in
     ''|*[!A-Za-z0-9._+-]*|*..*)
@@ -29,14 +44,6 @@ if [ "$BASE" != "$EXPECTED_BASE" ]; then
     echo "Release base URL must exactly match: $EXPECTED_BASE" >&2
     exit 1
 fi
-case "$FILENAME" in
-    tmstreamer_*.deb) ;;
-    *)
-        echo "Package filename must use the TMStreamer release naming convention." >&2
-        exit 1
-        ;;
-esac
-
 trap 'rm -f "$TMP"' EXIT HUP INT TERM
 python3 - "$PACKAGE_VERSION" "$ARCH" "$BASE/$FILENAME" "$(cat "$DEB.sig")" "$CHANGELOG" > "$TMP" <<'PY'
 import base64

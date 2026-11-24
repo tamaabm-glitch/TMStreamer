@@ -17,7 +17,7 @@ sudo apt-get install -y --no-install-recommends \
 
 [tasks."backend:boot-config"]
 description = "Disabled: TMStreamer package builds must not modify device boot configuration"
-run = "echo \"TMStreamer does not modify boot configuration automatically.\""
+run = "echo \"TMStreamer does not modify boot configuration automatically.\" >&2; exit 1"
 
 [tasks."backend:build"]
 description = "Build the backend"
@@ -119,18 +119,12 @@ dir = "device"
 run = "packaging/sign.sh \"$(ls -t backend/target/debian/*.deb | head -1)\""
 
 [tasks."device:package"]
-description = "Build the .deb and sign it"
+description = "Build an unsigned Debian package for test and audit; signing is a separate offline step"
 depends = ["device:deb"]
-dir = "device"
-run = "packaging/sign.sh \"$(ls -t backend/target/debian/*.deb | head -1)\""
 
 [tasks."device:serve-release"]
-description = "Serve the newest signed TMStreamer .deb locally for update-pipeline tests (TMSTREAMER_UPDATE_URL=http://localhost:8099/manifest.json)"
-dir = "device"
-run = [
-    "packaging/manifest.sh \"$(ls -t backend/target/debian/*.deb | head -1)\" http://localhost:8099",
-    "python3 -m http.server 8099 --bind 127.0.0.1 --directory backend/target/debian",
-]
+description = "Disabled: official distribution uses GitHub Releases only; updater remains locked until signed-release testing is complete"
+run = "echo \"Local HTTP release serving is disabled.\" >&2; exit 1"
 
 # --- Image ---
 

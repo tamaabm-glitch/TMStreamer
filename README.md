@@ -19,7 +19,7 @@ TMStreamer is an independently maintained distribution based on the upstream YSt
 
 ## Project status
 
-This repository contains an in-progress TMStreamer rebrand and integration branch. The upstream software's documented, tested device is Raspberry Pi 4. Radxa ROCK 3A support is a target under evaluation, not yet certified. An ARM64 build alone does not prove hardware compatibility.
+This repository is the active TMStreamer standalone integration branch. It retains required upstream copyright and provenance notices while replacing product identity, packaging, licensing and update infrastructure. Radxa ROCK 3A support remains under hardware evaluation; a successful ARM64 build alone does not certify DJI input, decoding, HDMI output or receiver compatibility.
 
 ## Capabilities inherited from upstream
 
@@ -47,10 +47,10 @@ The ARM64 build produces a package named `tmstreamer`, installs `/usr/bin/tmstre
 On a compatible Debian 12 ARM64 test device, install the package only after reviewing its control scripts and dependencies:
 
 ```sh
-sudo apt install ./tmstreamer_<version>-1_arm64.deb
+sudo apt install ./tmstreamer_0.1.2-1_arm64.deb
 ```
 
-The package deliberately does not enable or start `tmstreamer.service`. Do not start it on the Radxa while MundoStreamer or another DJI receiver is active. Service activation is a separate, explicitly approved cutover after the DJI input, HDMI output, TM-LIC gates, and rollback procedure pass on the actual hardware. The current package is not yet certified on Radxa ROCK 3A.
+The package deliberately does not enable or start `tmstreamer.service`. Do not start it on the Radxa while MundoStreamer or another DJI receiver is active. Service activation is a separate, explicitly approved cutover after the DJI input, HDMI output, TM-LIC gates, and rollback procedure pass on the actual hardware. No production GitHub Release has been published, and the signed updater remains disabled. The current package is not yet certified on Radxa ROCK 3A.
 
 ## TM-LIC integration
 

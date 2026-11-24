@@ -355,12 +355,23 @@ if [ $code != 0 ]; then
     echo $code >{RESULT}
     exit 0
 fi
+# Package upgrades deliberately do not restart services. Restart explicitly
+# here so the health check cannot mistake the old process for the new release.
+if ! systemctl restart tmstreamer.service >>{LOG} 2>&1; then
+    echo "TMStreamer did not restart after update" >>{LOG}
+    if [ -f {CURRENT} ] && apt-get install -y --allow-downgrades {dir}/{CURRENT} >>{LOG} 2>&1 && systemctl restart tmstreamer.service >>{LOG} 2>&1; then
+        echo {REVERTED} >{RESULT}
+    else
+        echo {UNANSWERED} >{RESULT}
+    fi
+    exit 0
+fi
 tries=0
 until curl --fail --silent --max-time 2 http://localhost:{port}/health | grep -q '"version":"{version}"'; do
     tries=$((tries + 1))
     if [ $tries -ge {HEALTH_TRIES} ]; then
         echo "Version {version} didn't start" >>{LOG}
-        if [ -f {CURRENT} ] && apt-get install -y --allow-downgrades {dir}/{CURRENT} >>{LOG} 2>&1; then
+        if [ -f {CURRENT} ] && apt-get install -y --allow-downgrades {dir}/{CURRENT} >>{LOG} 2>&1 && systemctl restart tmstreamer.service >>{LOG} 2>&1; then
             echo {REVERTED} >{RESULT}
         else
             echo {UNANSWERED} >{RESULT}

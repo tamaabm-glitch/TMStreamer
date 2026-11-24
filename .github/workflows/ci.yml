@@ -63,6 +63,8 @@ jobs:
         run: rustfmt --edition 2024 --check device/backend/src/system/update.rs
       - run: mise run backend:lint
       - run: mise run backend:test
+      - name: Test offline release signing and manifest validation
+        run: sh device/packaging/tests/security.sh
 
   frontend:
     name: Frontend

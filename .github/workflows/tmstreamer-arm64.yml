@@ -87,6 +87,8 @@ jobs:
           PACKAGE="$(dpkg-deb -f "$DEB" Package)"
           VERSION="$(dpkg-deb -f "$DEB" Version)"
           DEPENDS="$(dpkg-deb -f "$DEB" Depends)"
+          MAINTAINER="$(dpkg-deb -f "$DEB" Maintainer)"
+          RECOMMENDS="$(dpkg-deb -f "$DEB" Recommends)"
 
           echo "Package: $PACKAGE"
           echo "Version: $VERSION"
@@ -103,13 +105,48 @@ jobs:
             exit 1
           fi
 
+          if ! printf "%s" "$MAINTAINER" | grep -q "^TMStreamer Project "; then
+            echo "::error::Unexpected package maintainer: $MAINTAINER"
+            exit 1
+          fi
+
+          if printf "%s" "$RECOMMENDS" | grep -qi "raspi"; then
+            echo "::error::Raspberry Pi-only recommendation found in the Radxa package."
+            exit 1
+          fi
+
           if echo "$DEPENDS" | grep -q "libglib2.0-0t64"; then
             echo "::error::Incompatible t64 dependency detected."
             exit 1
           fi
 
           dpkg-deb --contents "$DEB" | tee package-contents.txt
-          grep -q "./lib/systemd/system/tmstreamer.service" package-contents.txt
+          grep -Eq "\\./(usr/)?lib/systemd/system/tmstreamer\\.service" package-contents.txt
+
+          ROOT="$(mktemp -d)"
+          CONTROL="$(mktemp -d)"
+          trap 'rm -rf "$ROOT" "$CONTROL"' EXIT
+          dpkg-deb -x "$DEB" "$ROOT"
+          dpkg-deb -e "$DEB" "$CONTROL"
+
+          test -x "$ROOT/usr/bin/tmstreamer"
+          test ! -e "$ROOT/usr/bin/ystreamer"
+          SERVICE="$ROOT/usr/lib/systemd/system/tmstreamer.service"
+          if [ ! -f "$SERVICE" ]; then SERVICE="$ROOT/lib/systemd/system/tmstreamer.service"; fi
+          grep -Fqx "ExecStart=/usr/bin/tmstreamer run" "$SERVICE"
+          grep -Fqx "ConfigurationDirectory=tmstreamer" "$SERVICE"
+          grep -Fqx "StateDirectory=tmstreamer" "$SERVICE"
+          test -f "$ROOT/usr/share/tmstreamer/config.txt"
+
+          if grep -Eq "boot/firmware|raspi-config|systemctl[[:space:]]+(start|restart)" "$CONTROL/postinst"; then
+            echo "::error::Package postinst mutates boot settings or starts/restarts services."
+            exit 1
+          fi
+          if grep -Eq "boot/firmware|raspi-config" "$CONTROL/postrm"; then
+            echo "::error::Package postrm mutates boot settings."
+            exit 1
+          fi
+          echo "Verified TMStreamer binary, service, paths and non-invasive package scripts."
 
       - name: Upload TMStreamer Debian 12 ARM64
         uses: actions/upload-artifact@v4

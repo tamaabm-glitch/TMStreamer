@@ -105,6 +105,18 @@ fn only_official_github_release_package_urls_are_accepted() {
         )
         .is_err()
     );
+    assert!(validate_release_package_url(
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/%2e%2e/evil.deb"
+    )
+    .is_err());
+    assert!(validate_release_package_url(
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/other-package.deb"
+    )
+    .is_err());
+    assert!(validate_release_package_url(
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer.deb/extra"
+    )
+    .is_err());
 }
 
 #[test]

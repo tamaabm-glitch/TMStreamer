@@ -25,7 +25,7 @@
   const isSetupPage = $derived(
     !license.licensed &&
       !wantsLogin &&
-      ["network", "display", "system", "logs", "performance"].includes(page.id),
+      ["input", "network", "display", "system", "logs", "performance"].includes(page.id),
   );
 
   $effect(() => {

@@ -352,7 +352,7 @@ fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
         .map_err(|e| format!("Machine ID sementara tidak dapat dibuat: {e}"))?;
     use std::io::Write;
     file.write_all(value.as_bytes())
-        .and_then(|_| file.write_all(b"\\n"))
+        .and_then(|_| file.write_all(b"\n"))
         .and_then(|_| file.sync_all())
         .map_err(|e| {
             let _ = fs::remove_file(&temporary);

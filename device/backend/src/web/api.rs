@@ -1,5 +1,6 @@
 mod access;
 mod display;
+mod license;
 mod network;
 mod recording;
 mod settings;
@@ -59,7 +60,8 @@ pub fn router<S>(services: Services) -> Router<S> {
     let public = Router::new()
         .route("/auth", get(access::auth_status))
         .route("/auth/login", post(access::login))
-        .route("/auth/logout", post(access::logout));
+        .route("/auth/logout", post(access::logout))
+        .route("/license/status", get(license::status));
 
     Router::new()
         .route("/auth/password", put(access::set_password))
@@ -103,25 +105,53 @@ pub fn router<S>(services: Services) -> Router<S> {
         .route("/terminal", get(system::terminal_info))
         .route("/terminal/shell", get(system::terminal_shell))
         .route("/system/{action}", post(system::system_action))
-        .route("/recording", get(recording::recording_status))
-        .route("/recording/start", post(recording::recording_start))
-        .route("/recording/stop", post(recording::recording_stop))
-        .route("/recording/button", get(recording::recording_button))
-        .route("/recording/files", get(recording::recording_files))
+        .route(
+            "/recording",
+            get(recording::recording_status)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
+        .route(
+            "/recording/start",
+            post(recording::recording_start)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
+        .route(
+            "/recording/stop",
+            post(recording::recording_stop)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
+        .route(
+            "/recording/button",
+            get(recording::recording_button)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
+        .route(
+            "/recording/files",
+            get(recording::recording_files)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
         .route(
             "/recording/files/{name}",
-            get(recording::recording_download).delete(recording::recording_delete),
+            get(recording::recording_download)
+                .delete(recording::recording_delete)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
         )
         .route(
             "/recording/storage-options",
-            get(recording::recording_storage_options),
+            get(recording::recording_storage_options)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
         )
-        .route("/recording/eject", post(recording::recording_eject))
+        .route(
+            "/recording/eject",
+            post(recording::recording_eject)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
+        )
         .route(
             "/recording/transfer",
             get(recording::transfer_status)
                 .post(recording::transfer_start)
-                .delete(recording::transfer_cancel),
+                .delete(recording::transfer_cancel)
+                .route_layer(axum::middleware::from_fn(license::recording_only)),
         )
         .route("/duml", get(system::duml_status).delete(system::duml_clear))
         .route("/duml/send", post(system::duml_send))

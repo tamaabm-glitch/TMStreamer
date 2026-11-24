@@ -4,6 +4,7 @@
   import { recording } from "@/stores/recording.svelte";
   import { WATCH, NAV_GROUPS, type NavPage } from "@/lib/nav";
   import { auth } from "@/stores/auth.svelte";
+  import { license } from "@/stores/license.svelte";
   import { developer } from "@/stores/developer.svelte";
   import { message } from "@/api/client";
   import { snackbar } from "@/stores/snackbar.svelte";
@@ -88,6 +89,10 @@
 
   const isDirty = (p: NavPage) =>
     p.sections.some((s) => settings.dirty.includes(s));
+
+  const licenseLocked = (p: NavPage) =>
+    !license.licensed &&
+    !["watch", "network", "display", "system", "logs", "performance"].includes(p.id);
 </script>
 
 <div class="flex h-full flex-col">
@@ -214,8 +219,11 @@
       <span class="h-1.5 w-1.5 rounded-full bg-accent" title="Unsaved changes"
       ></span>
     {/if}
-    {#if p.id !== "watch" && !auth.admin}
-      <Lock class="h-3.5 w-3.5 text-faint" aria-label="Needs a login" />
+    {#if p.id !== "watch" && (!auth.admin || licenseLocked(p))}
+      <Lock
+        class="h-3.5 w-3.5 text-faint"
+        aria-label={licenseLocked(p) ? "Needs a TMStreamer license" : "Needs a login"}
+      />
     {/if}
   </a>
 {/snippet}

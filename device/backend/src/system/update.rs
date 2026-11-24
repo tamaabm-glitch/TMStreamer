@@ -375,12 +375,8 @@ fn verify(public_key: &str, deb: &[u8], signature: &str) -> Result<(), String> {
         .map_err(|_| "The signature doesn't match this package".into())
 }
 
-/// A signed package for something else, or for another kind of device,
-/// would still install
-async fn check_package(
-    deb: &Path,
-    expected_manifest_version: Option<&str>,
-) -> Result<(), String> {
+/// Check the package identity, target architecture, and release version.
+async fn check_package(deb: &Path, expected_manifest_version: Option<&str>) -> Result<(), String> {
     let field = async |name: &str| {
         run("dpkg-deb", &["-f", &deb.to_string_lossy(), name])
             .await

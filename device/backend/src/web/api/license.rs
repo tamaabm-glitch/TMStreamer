@@ -55,21 +55,16 @@ pub(crate) async fn enforce(
     let path = path.strip_prefix("/api").unwrap_or(path);
     let method = request.method();
 
-    let required_features: &[&str] = if path.starts_with("/recording") {
-        &["recording"]
-    } else if path == "/settings/recording" && *method == axum::http::Method::PUT {
-        &["recording"]
-    } else if matches!(
+    let recording_settings =
+        path == "/settings/recording" && *method == axum::http::Method::PUT;
+    let streaming_settings = matches!(
         path,
-        "/settings/rtsp"
-            | "/settings/srt"
-            | "/settings/rtmp"
-            | "/settings/udp"
-            | "/settings/viewer"
-    ) && *method == axum::http::Method::PUT
-    {
-        &["streaming"]
-    } else if matches!(path, "/offer" | "/video") {
+        "/settings/rtsp" | "/settings/srt" | "/settings/rtmp" | "/settings/udp" | "/settings/viewer"
+    ) && *method == axum::http::Method::PUT;
+
+    let required_features: &[&str] = if path.starts_with("/recording") || recording_settings {
+        &["recording"]
+    } else if streaming_settings || matches!(path, "/offer" | "/video") {
         &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
         &["recording", "streaming"]

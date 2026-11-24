@@ -10,8 +10,20 @@ use serde::{Deserialize, Serialize};
 use crate::net::network::run;
 use crate::settings::SettingsStore;
 
-/// The private half signs releases and never comes near the repository
+/// The upstream key is available only to legacy unit tests. Production builds
+/// must never embed or trust the vendor release key.
+#[cfg(test)]
 const PUBLIC_KEY: &str = include_str!("../../../packaging/update-key.pub");
+
+#[cfg(test)]
+fn update_public_key() -> Result<&'static str, String> {
+    Ok(PUBLIC_KEY)
+}
+
+#[cfg(not(test))]
+fn update_public_key() -> Result<&'static str, String> {
+    Err("TMStreamer update signing key is not configured".into())
+}
 /// TMStreamer updates are intentionally disabled until its own signed
 /// release service and signing key are provisioned. Never fall back to the
 /// upstream YStreamer manifest.
@@ -235,7 +247,7 @@ pub async fn stage(deb: &[u8], signature: &str) -> Result<(), String> {
     if !UPDATE_PIPELINE_ENABLED {
         return Err("TMStreamer signed updates are not configured yet".into());
     }
-    verify(PUBLIC_KEY, deb, signature)?;
+    verify(update_public_key()?, deb, signature)?;
     fs::create_dir_all(DIR).map_err(|e| format!("Couldn't create {DIR}: {e}"))?;
     let upload = file("upload.deb");
     fs::write(&upload, deb).map_err(|e| format!("Couldn't store the package: {e}"))?;

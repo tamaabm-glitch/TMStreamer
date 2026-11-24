@@ -1,35 +1,55 @@
 use super::*;
 
-const MESSAGE: &[u8] = b"ystreamer update signature test";
-/// Made with packaging/sign.sh and the release key
-const SIGNATURE: &str =
-    "OxHasJoikfV8ax1bSbkuiDJM+KOWrSwxhn6NFy0GUOe2HbVV7Vpint6C4rKqoMib5/c6HN2VTcjO5W7Ev09JDg==";
+use ed25519_dalek::{Signer, SigningKey};
+
+const MESSAGE: &[u8] = b"TMStreamer update signature test";
+
+/// A deterministic throwaway key used only by unit tests. Never a release key.
+fn test_signing_key() -> SigningKey {
+    SigningKey::from_bytes(&[0x42; 32])
+}
+
+fn test_public_key() -> String {
+    base64::engine::general_purpose::STANDARD.encode(test_signing_key().verifying_key().to_bytes())
+}
+
+fn test_signature(message: &[u8]) -> String {
+    base64::engine::general_purpose::STANDARD
+        .encode(test_signing_key().sign(message).to_bytes())
+}
 
 #[test]
 fn release_key_accepts_what_sign_sh_signed() {
-    assert_eq!(verify(PUBLIC_KEY, MESSAGE, SIGNATURE), Ok(()));
+    let public_key = test_public_key();
+    let signature = test_signature(MESSAGE);
+    assert_eq!(verify(&public_key, MESSAGE, &signature), Ok(()));
     assert_eq!(
-        verify(PUBLIC_KEY, MESSAGE, &format!("{SIGNATURE}\n")),
+        verify(&public_key, MESSAGE, &format!("{signature}\n")),
         Ok(())
     );
 }
 
 #[test]
 fn changed_package_is_refused() {
-    assert!(verify(PUBLIC_KEY, b"ystreamer update signature tesT", SIGNATURE).is_err());
+    let public_key = test_public_key();
+    let signature = test_signature(MESSAGE);
+    assert!(verify(&public_key, b"TMStreamer update signature tesT", &signature).is_err());
 }
 
 #[test]
 fn signature_from_another_key_is_refused() {
-    let other = "A".repeat(86) + "==";
-    assert!(verify(PUBLIC_KEY, MESSAGE, &other).is_err());
+    let other = SigningKey::from_bytes(&[0x24; 32]);
+    let other_signature = base64::engine::general_purpose::STANDARD
+        .encode(other.sign(MESSAGE).to_bytes());
+    assert!(verify(&test_public_key(), MESSAGE, &other_signature).is_err());
 }
 
 #[test]
 fn junk_signature_is_refused() {
-    assert!(verify(PUBLIC_KEY, MESSAGE, "").is_err());
-    assert!(verify(PUBLIC_KEY, MESSAGE, "not base64!").is_err());
-    assert!(verify(PUBLIC_KEY, MESSAGE, "c2hvcnQ=").is_err());
+    let public_key = test_public_key();
+    assert!(verify(&public_key, MESSAGE, "").is_err());
+    assert!(verify(&public_key, MESSAGE, "not base64!").is_err());
+    assert!(verify(&public_key, MESSAGE, "c2hvcnQ=").is_err());
 }
 
 #[test]
@@ -163,7 +183,7 @@ fn failed_install_changes_nothing() {
 }
 
 #[test]
-fn install_script_checks_against_the_same_key() {
-    let script = include_str!("../../../packaging/install.sh");
-    assert!(script.contains(&format!("PUBLIC_KEY=\"{}\"", PUBLIC_KEY.trim())));
+fn production_release_updater_stays_closed_without_its_own_key() {
+    assert!(!UPDATE_PIPELINE_ENABLED);
+    assert!(update_public_key().is_err());
 }

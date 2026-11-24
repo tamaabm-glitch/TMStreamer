@@ -49,7 +49,7 @@ impl LicenseStatus {
             && self.license_system == "TM-LIC"
             && self.activated
             && self.status == "LICENSED"
-            && self.features.iter().any(|item| item == feature)
+            && self.features.iter().any(|item| item.as_str() == feature)
     }
 }
 

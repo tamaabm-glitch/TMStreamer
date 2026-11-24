@@ -1,33 +1,4 @@
-
 #!/bin/sh
 set -e
-
-CONFIG=/boot/firmware/config.txt
-BEGIN="# >>> ystreamer"
-END="# <<< ystreamer"
-
-is_raspberry_pi() {
-    [ -r /proc/device-tree/model ] || return 1
-    tr -d '\000' < /proc/device-tree/model | grep -qi 'Raspberry Pi'
-}
-
-remove_boot_settings() {
-    is_raspberry_pi || return 0
-    [ -f "$CONFIG" ] || return 0
-    grep -qF "$BEGIN" "$CONFIG" || return 0
-    sed -i "/^$BEGIN\$/,/^$END\$/d" "$CONFIG"
-    rm -f "$CONFIG.before-ystreamer"
-    echo "TMStreamer: restored $CONFIG; reboot required." >&2
-}
-
-case "$1" in
-    remove)
-        remove_boot_settings
-        ;;
-    purge)
-        remove_boot_settings
-        rm -rf /etc/ystreamer
-        ;;
-esac
-
+# Do not alter Raspberry Pi boot configuration or remove legacy YStreamer data.
 #DEBHELPER#

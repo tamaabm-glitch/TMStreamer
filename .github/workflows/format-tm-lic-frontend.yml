@@ -1,0 +1,42 @@
+name: One-time frontend formatting
+on:
+  push:
+    branches:
+      - tm-lic-v1.3-implementation
+    paths:
+      - ".github/workflows/format-tm-lic-frontend.yml"
+      - "device/frontend/src/App.svelte"
+      - "device/frontend/src/components/layout/Sidebar.svelte"
+      - "device/frontend/src/styles/app.css"
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tm-lic-v1.3-implementation
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: device/frontend/pnpm-lock.yaml
+      - name: Install frontend dependencies
+        working-directory: device/frontend
+        run: pnpm install --frozen-lockfile
+      - name: Format changed frontend files
+        working-directory: device/frontend
+        run: pnpm exec prettier --write src/App.svelte src/components/layout/Sidebar.svelte src/styles/app.css
+      - name: Commit formatting
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add device/frontend/src/App.svelte device/frontend/src/components/layout/Sidebar.svelte device/frontend/src/styles/app.css
+          if ! git diff --cached --quiet; then
+            git commit -m "Format TM-LIC frontend changes"
+            git push origin HEAD:tm-lic-v1.3-implementation
+          fi

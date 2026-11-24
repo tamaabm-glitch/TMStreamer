@@ -1,10 +1,12 @@
 use axum::{
     body::Bytes,
     extract::State,
+    http::{HeaderMap, StatusCode},
     Json,
 };
 
 use crate::tm_lic::LicenseStatus;
+use crate::web::auth::Access;
 
 use super::{ApiError, Services, bad};
 
@@ -14,8 +16,18 @@ pub(super) async fn status(State(services): State<Services>) -> Json<LicenseStat
 
 pub(super) async fn activate(
     State(services): State<Services>,
+    headers: HeaderMap,
     body: Bytes,
 ) -> Result<Json<LicenseStatus>, ApiError> {
+    if services.license.status().licensed
+        && services.auth.enabled()
+        && services.auth.access(&headers) != Access::Admin
+    {
+        return Err(ApiError(
+            StatusCode::FORBIDDEN,
+            "Login administrator diperlukan untuk mengganti lisensi aktif".into(),
+        ));
+    }
     let status = services.license.activate(&body).map_err(bad)?;
     services.apply_entitlements();
     Ok(Json(status))

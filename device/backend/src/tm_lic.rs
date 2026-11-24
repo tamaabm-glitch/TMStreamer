@@ -157,6 +157,225 @@ pub fn verify_envelope(
     Ok(VerifiedLicense { license_id, machine_id, tier, features, expires_at })
 }
 
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct LicenseStatus {
+    pub licensed: bool,
+    pub machine_id: Option<String>,
+    pub license_id: Option<String>,
+    pub tier: Option<String>,
+    pub features: Vec<String>,
+    pub expires_at: Option<String>,
+    pub message: Option<String>,
+}
+
+/// Persistent device-side licensing state. The state directory is inside
+/// systemd's existing ystreamer StateDirectory, so it survives package upgrades.
+#[derive(Clone)]
+pub struct LicenseService {
+    state_dir: std::path::PathBuf,
+    public_key_dir: std::path::PathBuf,
+    registry_path: std::path::PathBuf,
+    machine_id: Result<String, String>,
+    lock: std::sync::Arc<std::sync::Mutex<()>>,
+}
+
+impl LicenseService {
+    pub fn load() -> Self {
+        let state_dir = std::env::var_os("TM_LIC_STATE_DIR")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| std::path::PathBuf::from("/var/lib/ystreamer/tm-lic"));
+        let public_key_dir = std::env::var_os("TM_LIC_PUBLIC_KEY_DIR")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| std::path::PathBuf::from("/usr/share/ystreamer/tm-lic/public_keys"));
+        let registry_path = std::env::var_os("TM_LIC_REGISTRY")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| std::path::PathBuf::from("/usr/share/ystreamer/tm-lic/registry.json"));
+        let machine_id = load_or_create_machine_id(&state_dir);
+        Self {
+            state_dir,
+            public_key_dir,
+            registry_path,
+            machine_id,
+            lock: std::sync::Arc::new(std::sync::Mutex::new(())),
+        }
+    }
+
+    pub fn machine_id(&self) -> Result<&str, String> {
+        self.machine_id.as_deref().map_err(Clone::clone)
+    }
+
+    pub fn status(&self) -> LicenseStatus {
+        let machine_id = match &self.machine_id {
+            Ok(value) => value.clone(),
+            Err(error) => return LicenseStatus {
+                licensed: false,
+                machine_id: None,
+                license_id: None,
+                tier: None,
+                features: vec![],
+                expires_at: None,
+                message: Some(format!("Penyimpanan Machine ID bermasalah: {error}")),
+            },
+        };
+        let license_path = self.state_dir.join("license.json");
+        if !license_path.is_file() {
+            return LicenseStatus {
+                licensed: false,
+                machine_id: Some(machine_id),
+                license_id: None,
+                tier: None,
+                features: vec![],
+                expires_at: None,
+                message: None,
+            };
+        }
+        let result = (|| -> Result<VerifiedLicense, String> {
+            let bytes = fs::read(&license_path)
+                .map_err(|e| format!("File lisensi tidak dapat dibaca: {e}"))?;
+            if bytes.len() > 65_536 {
+                return Err("File lisensi melebihi batas 64 KiB".into());
+            }
+            let envelope: Value = serde_json::from_slice(&bytes)
+                .map_err(|_| "Format JSON lisensi tidak valid".to_string())?;
+            let registry: Value = serde_json::from_slice(&fs::read(&self.registry_path)
+                .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?)
+                .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
+            verify_envelope(&envelope, &machine_id, &registry, &self.public_key_dir)
+        })();
+        match result {
+            Ok(license) => LicenseStatus {
+                licensed: true,
+                machine_id: Some(machine_id),
+                license_id: Some(license.license_id),
+                tier: Some(license.tier),
+                features: license.features,
+                expires_at: license.expires_at,
+                message: None,
+            },
+            Err(error) => LicenseStatus {
+                licensed: false,
+                machine_id: Some(machine_id),
+                license_id: None,
+                tier: None,
+                features: vec![],
+                expires_at: None,
+                message: Some(error),
+            },
+        }
+    }
+
+    pub fn activate(&self, bytes: &[u8]) -> Result<LicenseStatus, String> {
+        if bytes.is_empty() || bytes.len() > 65_536 {
+            return Err("Ukuran file lisensi harus 1 sampai 65536 byte".into());
+        }
+        let _guard = self.lock.lock().map_err(|_| "License lock poisoned".to_string())?;
+        let machine_id = self.machine_id()?;
+        let envelope: Value = serde_json::from_slice(bytes)
+            .map_err(|_| "Format JSON lisensi tidak valid".to_string())?;
+        let registry: Value = serde_json::from_slice(&fs::read(&self.registry_path)
+            .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?)
+            .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
+        verify_envelope(&envelope, machine_id, &registry, &self.public_key_dir)?;
+
+        fs::create_dir_all(&self.state_dir)
+            .map_err(|e| format!("Direktori lisensi tidak dapat dibuat: {e}"))?;
+        #[cfg(unix)]
+        fs::set_permissions(&self.state_dir, std::os::unix::fs::PermissionsExt::from_mode(0o700))
+            .map_err(|e| format!("Izin direktori lisensi gagal diatur: {e}"))?;
+
+        let destination = self.state_dir.join("license.json");
+        let temporary = self.state_dir.join(format!("license.{}.tmp", std::process::id()));
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let mut file = options.open(&temporary)
+            .map_err(|e| format!("File sementara lisensi tidak dapat dibuat: {e}"))?;
+        use std::io::Write;
+        if let Err(error) = file.write_all(bytes).and_then(|_| file.sync_all()) {
+            let _ = fs::remove_file(&temporary);
+            return Err(format!("Lisensi gagal disimpan: {error}"));
+        }
+        drop(file);
+        if let Err(error) = fs::rename(&temporary, &destination) {
+            let _ = fs::remove_file(&temporary);
+            return Err(format!("Lisensi gagal diaktifkan: {error}"));
+        }
+        Ok(self.status())
+    }
+}
+
+fn load_or_create_machine_id(directory: &Path) -> Result<String, String> {
+    let path = directory.join("machine_id");
+    if path.exists() {
+        let value = fs::read_to_string(&path)
+            .map_err(|e| format!("Machine ID tidak dapat dibaca: {e}"))?;
+        let value = value.trim().to_owned();
+        if value.len() != 35 || !value.starts_with("TM-")
+            || !value[3..].bytes().all(|b| b.is_ascii_hexdigit())
+        {
+            return Err("Machine ID tersimpan rusak; tidak akan dibuat ulang otomatis".into());
+        }
+        return Ok(value.to_ascii_uppercase());
+    }
+
+    fs::create_dir_all(directory)
+        .map_err(|e| format!("Direktori Machine ID tidak dapat dibuat: {e}"))?;
+    #[cfg(unix)]
+    fs::set_permissions(directory, std::os::unix::fs::PermissionsExt::from_mode(0o700))
+        .map_err(|e| format!("Izin direktori Machine ID gagal diatur: {e}"))?;
+
+    let mut random = [0u8; 16];
+    use std::io::Read;
+    fs::File::open("/dev/urandom")
+        .and_then(|mut source| source.read_exact(&mut random))
+        .map_err(|e| format!("Sumber acak sistem tidak tersedia: {e}"))?;
+    let value = format!("TM-{}", hex::encode_upper(random));
+    let temporary = directory.join(format!("machine_id.{}.tmp", std::process::id()));
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(&temporary)
+        .map_err(|e| format!("Machine ID sementara tidak dapat dibuat: {e}"))?;
+    use std::io::Write;
+    file.write_all(value.as_bytes())
+        .and_then(|_| file.write_all(b"\\n"))
+        .and_then(|_| file.sync_all())
+        .map_err(|e| {
+            let _ = fs::remove_file(&temporary);
+            format!("Machine ID gagal disimpan: {e}")
+        })?;
+    drop(file);
+    match fs::rename(&temporary, &path) {
+        Ok(()) => Ok(value),
+        Err(error) if path.exists() => {
+            let _ = fs::remove_file(&temporary);
+            let existing = fs::read_to_string(&path)
+                .map_err(|e| format!("Machine ID hasil pembuatan paralel tidak dapat dibaca: {e}"))?;
+            let existing = existing.trim().to_owned();
+            if existing.len() == 35 && existing.starts_with("TM-")
+                && existing[3..].bytes().all(|b| b.is_ascii_hexdigit())
+            {
+                Ok(existing.to_ascii_uppercase())
+            } else {
+                Err("Machine ID hasil pembuatan paralel tidak valid".into())
+            }
+        }
+        Err(error) => {
+            let _ = fs::remove_file(&temporary);
+            Err(format!("Machine ID gagal dipasang: {error}"))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -2,7 +2,6 @@
   import type { Settings } from "@/types/settings";
   import DeviceSection from "@/components/system/DeviceSection.svelte";
   import MaintenanceSection from "@/components/system/MaintenanceSection.svelte";
-  import LicensePage from "@/components/license/LicensePage.svelte";
   let {
     device = $bindable(),
     advanced = $bindable(),
@@ -14,9 +13,7 @@
   } = $props();
 </script>
 
-{#if tab === "license"}
-  <LicensePage manage />
-{:else if tab === "general" || tab === "about"}
+{#if tab === "general" || tab === "about"}
   <DeviceSection bind:device {tab} />
 {:else}
   <MaintenanceSection bind:advanced {tab} />

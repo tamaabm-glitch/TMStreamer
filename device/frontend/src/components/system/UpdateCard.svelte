@@ -39,7 +39,8 @@
         </p>
         {#if status.failure.log}
           <pre
-            class="mt-2 max-h-48 overflow-auto rounded-lg bg-surface-2 p-3 font-mono text-[11px] whitespace-pre-wrap text-muted">{status.failure.log}</pre>
+            class="mt-2 max-h-48 overflow-auto rounded-lg bg-surface-2 p-3 font-mono text-[11px] whitespace-pre-wrap text-muted">{status
+              .failure.log}</pre>
         {/if}
       </div>
     {/if}

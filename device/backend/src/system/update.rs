@@ -12,13 +12,12 @@ use crate::settings::SettingsStore;
 
 /// The private half signs releases and never comes near the repository
 const PUBLIC_KEY: &str = include_str!("../../../packaging/update-key.pub");
-/// Ours rather than the host of the day, since devices in the field keep
-/// asking here whatever the releases move to
-const MANIFEST_URL: &str = "https://ystreamer.yarosfpv.com/update/manifest.json";
-/// Points a test at a release served from somewhere else
-const MANIFEST_URL_ENV: &str = "YSTREAMER_UPDATE_URL";
+/// TMStreamer updates are intentionally disabled until its own signed
+/// release service and signing key are provisioned. Never fall back to the
+/// upstream YStreamer manifest.
+const MANIFEST_URL_ENV: &str = "TMSTREAMER_UPDATE_URL";
 const MAX_PACKAGE_BYTES: u64 = 64 << 20;
-const PACKAGE: &str = "ystreamer";
+const PACKAGE: &str = "tmstreamer";
 /// Long enough after starting for the network to be up
 const FIRST_CHECK: Duration = Duration::from_secs(60);
 const CHECK_INTERVAL: Duration = Duration::from_secs(12 * 60 * 60);
@@ -26,10 +25,10 @@ const RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60);
 
 /// The newest release the update server has told us about
 static LATEST: Mutex<Option<Release>> = Mutex::new(None);
-const DIR: &str = "/var/lib/ystreamer/update";
+const DIR: &str = "/var/lib/tmstreamer/update";
 /// Runs the install outside this service, which the package restarts
 /// partway through
-const UNIT: &str = "ystreamer-update";
+const UNIT: &str = "tmstreamer-update";
 
 const STAGED: &str = "staged.deb";
 const CURRENT: &str = "current.deb";
@@ -149,7 +148,8 @@ pub async fn download() -> Result<(), String> {
 }
 
 async fn manifest() -> Result<Manifest, String> {
-    let url = std::env::var(MANIFEST_URL_ENV).unwrap_or_else(|_| MANIFEST_URL.into());
+    let url = std::env::var(MANIFEST_URL_ENV)
+        .map_err(|_| "TMStreamer update service is not configured yet".to_string())?;
     let text = fetch(&url, None).await?;
     serde_json::from_str(&text).map_err(|_| "The update server sent something unexpected".into())
 }
@@ -360,7 +360,7 @@ async fn check_package(deb: &Path) -> Result<(), String> {
             .map_err(|_| "That isn't a package file".to_string())
     };
     if field("Package").await? != PACKAGE {
-        return Err("That package isn't YStreamer".into());
+        return Err("That package isn't TMStreamer".into());
     }
     let ours = architecture().await?;
     let theirs = field("Architecture").await?;

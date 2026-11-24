@@ -1,40 +1,5 @@
-
 #!/bin/sh
 set -e
-
-CONFIG=/boot/firmware/config.txt
-WANTED=${WANTED:-/usr/share/ystreamer/config.txt}
-BEGIN="# >>> ystreamer"
-END="# <<< ystreamer"
-
-is_raspberry_pi() {
-    [ -r /proc/device-tree/model ] || return 1
-    tr -d '\000' < /proc/device-tree/model | grep -qi 'Raspberry Pi'
-}
-
-add_boot_settings() {
-    is_raspberry_pi || return 0
-    [ -f "$CONFIG" ] || return 0
-    grep -qF "$BEGIN" "$CONFIG" && return 0
-
-    missing=$(grep -v '^#' "$WANTED" | while read -r line; do
-        [ -n "$line" ] || continue
-        grep -qxF "$line" "$CONFIG" || echo "$line"
-    done)
-    [ -n "$missing" ] || return 0
-
-    cp -p "$CONFIG" "$CONFIG.before-ystreamer"
-    {
-        echo "$BEGIN"
-        echo "[all]"
-        echo "$missing"
-        echo "$END"
-    } >> "$CONFIG"
-    echo "TMStreamer: changed $CONFIG; reboot required." >&2
-}
-
-if [ "$1" = configure ]; then
-    add_boot_settings
-fi
-
+# TMStreamer package installation must not edit boot configuration or take
+# ownership of display/USB hardware. Package activation is an explicit later step.
 #DEBHELPER#

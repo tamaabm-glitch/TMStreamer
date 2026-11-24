@@ -18,8 +18,12 @@ fn update_public_key() -> Result<&'static str, String> {
         .ok_or_else(|| "TMStreamer update signing key is not configured".into())
 }
 
-/// The manifest is supplied at runtime; never fall back to the upstream URL.
+/// GitHub Releases is the only trusted update origin for this product.
 const MANIFEST_URL_ENV: &str = "TMSTREAMER_UPDATE_URL";
+const OFFICIAL_MANIFEST_URL: &str =
+    "https://github.com/tamaabm-glitch/TMStreamer/releases/latest/download/manifest.json";
+const OFFICIAL_PACKAGE_PREFIX: &str =
+    "https://github.com/tamaabm-glitch/TMStreamer/releases/download/";
 // Builds without the TMStreamer-owned public key remain unable to install.
 const UPDATE_PIPELINE_ENABLED: bool =
     matches!(option_env!("TMSTREAMER_UPDATE_PUBLIC_KEY"), Some(key) if !key.is_empty());
@@ -166,8 +170,35 @@ pub async fn download() -> Result<(), String> {
 async fn manifest() -> Result<Manifest, String> {
     let url = std::env::var(MANIFEST_URL_ENV)
         .map_err(|_| "TMStreamer update service is not configured yet".to_string())?;
+    if url != OFFICIAL_MANIFEST_URL {
+        return Err("TMStreamer updates must use the official GitHub Releases manifest".into());
+    }
     let text = fetch(&url, None).await?;
-    serde_json::from_str(&text).map_err(|_| "The update server sent something unexpected".into())
+    let signature = fetch(&format!("{url}.sig"), None).await?;
+    verify(update_public_key()?, text.as_bytes(), &signature)
+        .map_err(|_| "The update manifest signature is invalid".to_string())?;
+    let manifest: Manifest = serde_json::from_str(&text)
+        .map_err(|_| "The update server sent something unexpected".to_string())?;
+    for package in manifest.packages.values() {
+        validate_release_package_url(&package.url)?;
+    }
+    Ok(manifest)
+}
+
+fn validate_release_package_url(url: &str) -> Result<(), String> {
+    let asset = url
+        .strip_prefix(OFFICIAL_PACKAGE_PREFIX)
+        .ok_or("TMStreamer packages must be downloaded from official GitHub Releases")?;
+    if asset.is_empty()
+        || !asset.ends_with(".deb")
+        || asset.contains("..")
+        || asset.contains('?')
+        || asset.contains('#')
+        || asset.contains('\\')
+    {
+        return Err("The GitHub Release package URL is invalid".into());
+    }
+    Ok(())
 }
 
 /// The body, or nothing when it goes to `into`

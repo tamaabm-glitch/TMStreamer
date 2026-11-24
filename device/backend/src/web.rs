@@ -107,6 +107,23 @@ pub fn start(
             tokio::spawn(link_watch(services.clone(), control_tx.clone()));
             tokio::spawn(crate::system::drives::watch());
             tokio::spawn(crate::system::update::watch(Arc::clone(&services.store)));
+
+            // Re-check the signed license periodically so an expired or revoked
+            // entitlement also stops active network outputs and recording.
+            {
+                let services = services.clone();
+                tokio::spawn(async move {
+                    let mut previous = services.license.status();
+                    loop {
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let current = services.license.status();
+                        if current != previous {
+                            services.apply_entitlements();
+                            previous = current;
+                        }
+                    }
+                });
+            }
             tokio::spawn(finish_recording_on_exit(Arc::clone(&services.recorder)));
             tokio::spawn(reload_login_on_hangup(Arc::clone(&services.auth)));
             tokio::spawn(recording_watch(

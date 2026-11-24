@@ -35,7 +35,6 @@ pub(super) async fn activate(
 
 use axum::{
     extract::Request,
-    http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
 };

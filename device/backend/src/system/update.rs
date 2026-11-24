@@ -146,11 +146,20 @@ pub async fn download() -> Result<(), String> {
     ))?;
     fs::create_dir_all(DIR).map_err(|e| format!("Couldn't create {DIR}: {e}"))?;
     let path = file("download.deb");
-    let fetched = fetch(&package.url, Some(&path)).await;
-    let deb = fs::read(&path);
+    if let Err(error) = fetch(&package.url, Some(&path)).await {
+        let _ = fs::remove_file(&path);
+        return Err(error);
+    }
+    let deb = match fs::read(&path) {
+        Ok(deb) => deb,
+        Err(error) => {
+            let _ = fs::remove_file(&path);
+            return Err(format!("Couldn't read the download: {error}"));
+        }
+    };
+    let checked = check_package(&path, Some(&manifest.version)).await;
     let _ = fs::remove_file(&path);
-    fetched?;
-    let deb = deb.map_err(|e| format!("Couldn't read the download: {e}"))?;
+    checked?;
     stage(&deb, &package.signature).await
 }
 
@@ -243,7 +252,7 @@ pub async fn stage(deb: &[u8], signature: &str) -> Result<(), String> {
     fs::create_dir_all(DIR).map_err(|e| format!("Couldn't create {DIR}: {e}"))?;
     let upload = file("upload.deb");
     fs::write(&upload, deb).map_err(|e| format!("Couldn't store the package: {e}"))?;
-    let checked = check_package(&upload).await;
+    let checked = check_package(&upload, None).await;
     if checked.is_err() {
         let _ = fs::remove_file(&upload);
     }
@@ -368,7 +377,10 @@ fn verify(public_key: &str, deb: &[u8], signature: &str) -> Result<(), String> {
 
 /// A signed package for something else, or for another kind of device,
 /// would still install
-async fn check_package(deb: &Path) -> Result<(), String> {
+async fn check_package(
+    deb: &Path,
+    expected_manifest_version: Option<&str>,
+) -> Result<(), String> {
     let field = async |name: &str| {
         run("dpkg-deb", &["-f", &deb.to_string_lossy(), name])
             .await
@@ -384,6 +396,28 @@ async fn check_package(deb: &Path) -> Result<(), String> {
         return Err(format!(
             "That package is for {theirs} devices, this one is {ours}"
         ));
+    }
+    let package_version = field("Version").await?;
+    validate_release_version(
+        &package_version,
+        expected_manifest_version,
+        env!("CARGO_PKG_VERSION"),
+    )?;
+    Ok(())
+}
+
+/// Require the signed Debian package, manifest, and running version to agree.
+fn validate_release_version(
+    package_version: &str,
+    expected_manifest_version: Option<&str>,
+    current_version: &str,
+) -> Result<(), String> {
+    let package_version = display_version(package_version);
+    if !is_newer(package_version, current_version) {
+        return Err("That package is not newer than the installed TMStreamer version".into());
+    }
+    if expected_manifest_version.is_some_and(|expected| expected != package_version) {
+        return Err("The manifest version does not match the Debian package version".into());
     }
     Ok(())
 }

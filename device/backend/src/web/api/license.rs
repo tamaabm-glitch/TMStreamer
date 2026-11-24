@@ -55,11 +55,14 @@ pub(crate) async fn enforce(
     let path = path.strip_prefix("/api").unwrap_or(path);
     let method = request.method();
 
-    let recording_settings =
-        path == "/settings/recording" && *method == axum::http::Method::PUT;
+    let recording_settings = path == "/settings/recording" && *method == axum::http::Method::PUT;
     let streaming_settings = matches!(
         path,
-        "/settings/rtsp" | "/settings/srt" | "/settings/rtmp" | "/settings/udp" | "/settings/viewer"
+        "/settings/rtsp"
+            | "/settings/srt"
+            | "/settings/rtmp"
+            | "/settings/udp"
+            | "/settings/viewer"
     ) && *method == axum::http::Method::PUT;
 
     let required_features: &[&str] = if path.starts_with("/recording") || recording_settings {

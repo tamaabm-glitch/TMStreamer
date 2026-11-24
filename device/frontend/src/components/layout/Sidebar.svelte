@@ -102,10 +102,7 @@
     {@render item(WATCH)}
 
     {#each NAV_GROUPS as group}
-      <span
-        class="mt-5 mb-1.5 px-3 text-[11px] tracking-wide text-faint uppercase"
-        >{group.label}</span
-      >
+      <span class="mt-5 mb-1.5 px-3 text-[10px] font-bold tracking-[0.18em] uppercase {group.label === "Video" ? "text-[#D58B25]" : group.label === "Streaming" ? "text-[#159B80]" : "text-[#7956BD]"}">{group.label}</span>
       {#each group.pages.filter((p) => p.id !== "terminal" || terminalUsable) as p}
         {@render item(p)}
       {/each}
@@ -188,15 +185,14 @@
     href="/{p.id === 'watch' ? '' : p.id}"
     onclick={() => onnavigate(p.id)}
     aria-current={active ? "page" : undefined}
-    class="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary
+    class="group flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-[13px] font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary
       {active
-      ? 'bg-surface-2 text-fg'
-      : 'text-muted hover:bg-surface-2/60 hover:text-fg'}"
+      ? p.id === 'input' || p.id === 'display' ? 'border-[#D58B25]/30 bg-[#D58B25]/15 text-fg shadow-[inset_3px_0_0_#D58B25,0_4px_12px_rgba(0,0,0,0.18)]' : p.id === 'streaming' || p.id === 'recording' ? 'border-[#159B80]/30 bg-[#159B80]/15 text-fg shadow-[inset_3px_0_0_#159B80,0_4px_12px_rgba(0,0,0,0.18)]' : 'border-[#7956BD]/30 bg-[#7956BD]/15 text-fg shadow-[inset_3px_0_0_#7956BD,0_4px_12px_rgba(0,0,0,0.18)]'
+      : 'text-muted hover:border-line hover:bg-surface-2/70 hover:text-fg'}"
   >
-    <p.icon
-      class="h-4 w-4 shrink-0 {active ? 'text-primary' : ''}"
-      aria-hidden="true"
-    />
+    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 shadow-[0_3px_0_rgba(0,0,0,0.3),0_5px_10px_rgba(0,0,0,0.2)] transition-transform group-hover:-translate-y-0.5 {p.id === 'input' || p.id === 'display' ? 'bg-gradient-to-br from-[#F0A83D] to-[#A85E12]' : p.id === 'streaming' || p.id === 'recording' ? 'bg-gradient-to-br from-[#26C6A0] to-[#08765F]' : p.id === 'watch' ? 'bg-gradient-to-br from-[#35A9E8] to-[#075A94]' : 'bg-gradient-to-br from-[#A98AE8] to-[#55358F]'}">
+      <p.icon class="h-4 w-4 text-white drop-shadow" aria-hidden="true" />
+    </span>
     <span class="flex-1">{p.label}</span>
     {#if p.id === "recording" && transfer.running}
       <span title="Copying recordings">

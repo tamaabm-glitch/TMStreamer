@@ -1,8 +1,6 @@
 [Unit]
-Description=TMStreamer
-# ystreamer-data only exists on the image, where it puts the settings and
-# recordings on their own partition first
-After=NetworkManager.service systemd-modules-load.service ystreamer-data.service
+Description=TMStreamer standalone service
+After=NetworkManager.service systemd-modules-load.service
 Wants=NetworkManager.service
 StartLimitIntervalSec=0
 
@@ -13,8 +11,8 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=2
 # Keep the upstream-compatible settings and recordings locations.
-ConfigurationDirectory=ystreamer
-StateDirectory=ystreamer
+ConfigurationDirectory=tmstreamer
+StateDirectory=tmstreamer
 # Finishing an open recording can take a few seconds
 TimeoutStopSec=15
 

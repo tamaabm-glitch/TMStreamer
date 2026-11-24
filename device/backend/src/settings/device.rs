@@ -33,7 +33,7 @@ impl Default for AdvancedSettings {
         Self {
             verbose_logs: false,
             terminal: false,
-            check_for_updates: true,
+            check_for_updates: false,
         }
     }
 }

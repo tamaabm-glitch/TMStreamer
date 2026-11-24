@@ -38,6 +38,7 @@ pub struct Services {
     pub auth: Arc<Auth>,
     pub license: crate::tm_lic::LicenseService,
     pub streaming_enabled: Arc<std::sync::atomic::AtomicBool>,
+    pub applied_license_status: Arc<std::sync::Mutex<crate::tm_lic::LicenseStatus>>,
     pub network: Arc<Network>,
     pub rtsp: Arc<RtspServer>,
     pub srt: Arc<SrtOutput>,
@@ -93,6 +94,7 @@ impl Services {
         let mut button = cfg.recording.button.clone();
         button.enabled &= recording;
         self.button.configure(&button);
+        *self.applied_license_status.lock().unwrap() = status;
     }
 }
 

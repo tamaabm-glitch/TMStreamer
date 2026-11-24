@@ -87,7 +87,7 @@
           <ShieldCheck class="mt-0.5 h-5 w-5 shrink-0 text-up" aria-hidden="true" />
           <div>
             <p class="text-sm font-semibold text-fg">Lisensi aktif</p>
-            <p class="mt-1 text-xs text-muted">Perangkat ini telah lolos verifikasi TM-LIC.</p>
+            <p class="mt-1 text-xs text-muted">Perangkat ini telah lolos verifikasi TM-LIC. Setelah aktivasi lisensi baru, restart layanan TMStreamer agar output yang dikunci saat boot dapat aktif.</p>
           </div>
         </div>
       {:else}

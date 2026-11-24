@@ -40,6 +40,20 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 - Test on Radxa ROCK 3A hardware before declaring an installer ready.
 - On-device deployment should preserve existing settings and recordings.
 
+## Installing the Debian package
+
+The ARM64 build produces a package named `tmstreamer` and installs the `tmstreamer.service` unit. The executable and upstream-compatible settings/state directories intentionally retain their existing YStreamer names.
+
+On a compatible Debian 12 ARM64 device, install the downloaded package with:
+
+```sh
+sudo apt install ./tmstreamer_0.1.2-1_arm64.deb
+sudo systemctl enable --now tmstreamer.service
+sudo systemctl status tmstreamer.service --no-pager
+```
+
+Do not run a second copy if the old YStreamer service is already active; stop and disable that old unit before starting the new one. This package is not yet certified on Radxa ROCK 3A.
+
 ## TM-LIC integration
 
 The integration uses the TM-LIC verifier as the only entitlement authority; it does not use legacy MUNDOLIC tokens or the dashboard's cached license-status JSON.

@@ -132,6 +132,9 @@
       Koneksi jaringan dan pengaturan HDMI tetap dapat diakses selama proses aktivasi.
     </p>
     <div class="flex flex-wrap gap-2">
+      {#if license.canRecord}
+        <a href="/recording" class="rounded-md border border-line px-3 py-2 text-xs font-medium text-fg hover:bg-surface-2">Recording</a>
+      {/if}
       <a href="/input" class="rounded-md border border-line px-3 py-2 text-xs font-medium text-fg hover:bg-surface-2">DJI Input</a>
       <a href="/network" class="rounded-md border border-line px-3 py-2 text-xs font-medium text-fg hover:bg-surface-2">
         Network setup

@@ -88,16 +88,16 @@
       <LoginForm reason="Log in to change settings and control the camera." />
     {:else if page.id === "license"}
       <PageHeader title={page.label} />
-      <LicensePage />
+      <LicensePage canActivate={auth.admin} />
     {:else if isWatchPage && !streamingLicensed}
       <PageHeader title="TM-LIC License" />
-      <LicensePage />
+      <LicensePage canActivate={auth.admin} />
     {:else if page.id === "streaming" && !streamingLicensed}
       <PageHeader title="TM-LIC License" />
-      <LicensePage />
+      <LicensePage canActivate={auth.admin} />
     {:else if page.id === "recording" && !recordingLicensed}
       <PageHeader title="TM-LIC License" />
-      <LicensePage />
+      <LicensePage canActivate={auth.admin} />
     {:else if isWatchPage}
       <WatchPage title={page.label} bind:theater />
     {:else}

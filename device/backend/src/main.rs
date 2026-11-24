@@ -26,7 +26,6 @@ use output::rtsp::RtspServer;
 use output::splash::Splash;
 use output::srt::SrtOutput;
 use output::udp::UdpOutput;
-use settings::InputMode;
 use system::{button, metrics};
 use web::{api, auth};
 

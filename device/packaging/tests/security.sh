@@ -30,7 +30,7 @@ make_deb() {
     mkdir -p "$dir/DEBIAN"
     cat > "$dir/DEBIAN/control" <<EOF
 Package: $package
-Version: 0.1.2-1
+Version: 0.1.3-1
 Architecture: $arch
 Maintainer: TMStreamer Project <noreply@tmstreamer.invalid>
 Description: Temporary package for TMStreamer signing tests
@@ -38,7 +38,7 @@ EOF
     dpkg-deb --build "$dir" "$output" >/dev/null
 }
 
-DEB="$TMP/tmstreamer_0.1.2-1_arm64.deb"
+DEB="$TMP/tmstreamer_0.1.3-1_arm64.deb"
 make_deb tmstreamer arm64 "$DEB"
 sh "$PACKAGING/sign.sh" "$DEB" >/dev/null
 
@@ -47,10 +47,9 @@ base64 -d < "$DEB.sig" > "$TMP/package.sig"
 openssl pkeyutl -verify -pubin -inkey "$TMP/public.pem" -rawin \
     -in "$DEB" -sigfile "$TMP/package.sig" >/dev/null
 
-BASE="https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.2"
+BASE="https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3"
 sh "$PACKAGING/manifest.sh" "$DEB" "$BASE" >/dev/null
 MANIFEST="$TMP/manifest.json"
-cp "$TMP/manifest.json" "$MANIFEST"
 sh "$PACKAGING/sign.sh" "$MANIFEST" >/dev/null
 base64 -d < "$MANIFEST.sig" > "$TMP/manifest.sig"
 openssl pkeyutl -verify -pubin -inkey "$TMP/public.pem" -rawin \
@@ -64,12 +63,12 @@ if openssl pkeyutl -verify -pubin -inkey "$TMP/public.pem" -rawin \
     exit 1
 fi
 
-if sh "$PACKAGING/manifest.sh" "$DEB" "https://example.com/releases/v0.1.2" >/dev/null 2>&1; then
+if sh "$PACKAGING/manifest.sh" "$DEB" "https://example.com/releases/v0.1.3" >/dev/null 2>&1; then
     echo "Manifest generator accepted a non-official release origin." >&2
     exit 1
 fi
 
-WRONG_NAME="$TMP/not-tmstreamer_0.1.2-1_arm64.deb"
+WRONG_NAME="$TMP/not-tmstreamer_0.1.3-1_arm64.deb"
 make_deb not-tmstreamer arm64 "$WRONG_NAME"
 cp "$DEB.sig" "$WRONG_NAME.sig"
 if sh "$PACKAGING/manifest.sh" "$WRONG_NAME" "$BASE" >/dev/null 2>&1; then
@@ -77,7 +76,7 @@ if sh "$PACKAGING/manifest.sh" "$WRONG_NAME" "$BASE" >/dev/null 2>&1; then
     exit 1
 fi
 
-WRONG_ARCH="$TMP/tmstreamer_0.1.2-1_amd64.deb"
+WRONG_ARCH="$TMP/tmstreamer_0.1.3-1_amd64.deb"
 make_deb tmstreamer amd64 "$WRONG_ARCH"
 cp "$DEB.sig" "$WRONG_ARCH.sig"
 if sh "$PACKAGING/manifest.sh" "$WRONG_ARCH" "$BASE" >/dev/null 2>&1; then

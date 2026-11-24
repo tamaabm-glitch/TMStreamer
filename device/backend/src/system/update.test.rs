@@ -78,11 +78,11 @@ fn only_a_higher_version_is_newer() {
 #[test]
 fn release_manifest_and_debian_package_versions_must_match_and_advance() {
     assert_eq!(
-        validate_release_version("0.1.3-1", Some("0.1.3"), "0.1.2"),
+        validate_release_version("0.1.4-1", Some("0.1.4"), "0.1.3"),
         Ok(())
     );
-    assert!(validate_release_version("0.1.3-1", Some("0.1.4"), "0.1.2").is_err());
-    assert!(validate_release_version("0.1.1-1", Some("0.1.1"), "0.1.2").is_err());
+    assert!(validate_release_version("0.1.4-1", Some("0.1.5"), "0.1.3").is_err());
+    assert!(validate_release_version("0.1.2-1", Some("0.1.2"), "0.1.3").is_err());
     assert!(validate_release_version("garbled-1", Some("garbled"), "0.1.2").is_err());
 }
 

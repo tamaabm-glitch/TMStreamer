@@ -87,6 +87,31 @@ fn release_manifest_and_debian_package_versions_must_match_and_advance() {
 }
 
 #[test]
+fn only_official_github_release_package_urls_are_accepted() {
+    assert!(validate_release_package_url(
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer_0.1.3-1_arm64.deb"
+    )
+    .is_ok());
+    assert!(validate_release_package_url("https://example.com/tmstreamer.deb").is_err());
+    assert!(validate_release_package_url(
+        "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb"
+    )
+    .is_err());
+    assert!(validate_release_package_url(
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb"
+    )
+    .is_err());
+}
+
+#[test]
+fn signed_manifest_bytes_are_verified_before_parsing() {
+    let public_key = test_public_key();
+    let signature = test_signature(MESSAGE);
+    assert_eq!(verify(&public_key, MESSAGE, &signature), Ok(()));
+    assert!(verify(&public_key, b"modified manifest", &signature).is_err());
+}
+
+#[test]
 fn manifest_reads_without_notes() {
     let manifest: Manifest = serde_json::from_str(
         r#"{"version": "0.2.0", "packages": {"arm64": {"url": "https://example.com/a.deb", "signature": "c2ln"}}}"#,

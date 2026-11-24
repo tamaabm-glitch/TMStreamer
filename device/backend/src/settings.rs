@@ -108,7 +108,7 @@ impl SettingsStore {
         }
         .for_install();
         if is_image() {
-            eprintln!("[settings] running from the YStreamer image");
+            eprintln!("[settings] running from the TMStreamer-compatible image");
             // A fresh image has no other way in until someone sets one up
             if fresh {
                 current.wifi.mode = WifiMode::Ap;
@@ -191,17 +191,26 @@ fn keep_copy(path: &std::path::Path, version: u64) {
 }
 
 pub fn config_path() -> PathBuf {
+    // Prefer the TMStreamer path, while preserving explicit legacy overrides
+    // so existing deployments can migrate without losing their settings.
+    if let Ok(p) = std::env::var("TMSTREAMER_CONFIG") {
+        return PathBuf::from(p);
+    }
     if let Ok(p) = std::env::var("YSTREAMER_CONFIG") {
         return PathBuf::from(p);
     }
     if unsafe { libc::geteuid() } == 0 {
-        return PathBuf::from("/etc/ystreamer/settings.json");
+        let current = PathBuf::from("/etc/tmstreamer/settings.json");
+        let legacy = PathBuf::from("/etc/ystreamer/settings.json");
+        return if current.exists() || !legacy.exists() { current } else { legacy };
     }
     let base = std::env::var("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|_| std::env::var("HOME").map(|h| PathBuf::from(h).join(".config")))
         .unwrap_or_else(|_| PathBuf::from("."));
-    base.join("ystreamer/settings.json")
+    let current = base.join("tmstreamer/settings.json");
+    let legacy = base.join("ystreamer/settings.json");
+    if current.exists() || !legacy.exists() { current } else { legacy }
 }
 
 #[cfg(test)]

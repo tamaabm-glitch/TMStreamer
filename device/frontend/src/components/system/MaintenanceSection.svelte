@@ -179,7 +179,7 @@
       </Field>
     </Card>
   {:else if tab === "updates"}
-    <UpdateCard bind:advanced />
+    <UpdateCard advanced={advanced} />
   {:else if tab === "configuration"}
     <Card title="Configuration">
       <Field label="Export settings">

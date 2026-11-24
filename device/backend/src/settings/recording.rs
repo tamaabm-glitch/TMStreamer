@@ -74,9 +74,9 @@ impl ButtonSettings {
 impl Default for RecordingSettings {
     fn default() -> Self {
         Self {
-            path: "/var/lib/ystreamer/recordings".into(),
+            path: "/var/lib/tmstreamer/recordings".into(),
             format: RecordingFormat::Mp4,
-            prefix: "ystreamer".into(),
+            prefix: "tmstreamer".into(),
             split_minutes: 10,
             auto_start: false,
             reserve_mb: 500,

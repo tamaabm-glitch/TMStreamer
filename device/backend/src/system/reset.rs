@@ -17,7 +17,10 @@ const POLL: Duration = Duration::from_millis(100);
 const SHOWN_FOR: Duration = Duration::from_secs(10 * 60);
 
 /// On the card's boot partition, which any computer can write to
-const FILES: [&str; 2] = [
+const FILES: [&str; 4] = [
+    "/boot/firmware/tmstreamer-reset",
+    "/boot/firmware/tmstreamer-reset.txt",
+    // Read the old names during migration so an existing reset request still works.
     "/boot/firmware/ystreamer-reset",
     "/boot/firmware/ystreamer-reset.txt",
 ];
@@ -57,7 +60,7 @@ pub fn at_startup(settings: &Path) {
     });
 }
 
-/// Ask for a reset at the next start, the way `ystreamer reset` does
+/// Ask for a reset at the next start, the way `tmstreamer reset` does
 pub fn request(settings: &Path) -> Result<(), String> {
     let file = request_file(settings);
     let failed = |e: std::io::Error| format!("Couldn't write {}: {e}", file.display());
@@ -130,7 +133,7 @@ impl Pin {
     fn open() -> Option<Self> {
         let request = Request::builder()
             .on_chip(CHIP)
-            .with_consumer("ystreamer-reset")
+            .with_consumer("tmstreamer-reset")
             .with_line(PIN as u32)
             .as_input()
             .with_bias(Bias::PullUp)

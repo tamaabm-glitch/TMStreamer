@@ -32,3 +32,10 @@ fn rejects_pins_that_are_not_free() {
 fn rejects_the_button_and_light_on_one_pin() {
     assert!(button(17, Some(17)).validate().is_err());
 }
+
+#[test]
+fn fresh_recordings_use_tmstreamer_paths_and_names() {
+    let defaults = RecordingSettings::default();
+    assert_eq!(defaults.path, "/var/lib/tmstreamer/recordings");
+    assert_eq!(defaults.prefix, "tmstreamer");
+}

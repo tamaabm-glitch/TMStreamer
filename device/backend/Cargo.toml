@@ -36,7 +36,7 @@ depends = """$auto,
     gstreamer1.0-libav,
     network-manager, dnsmasq-base, wpasupplicant, iw, iproute2, avahi-daemon,
     udisks2, kmod, util-linux, passwd, systemd, curl, ca-certificates, tzdata, python3"""
-recommends = "raspi-utils-core, openssh-server"
+recommends = "openssh-server"
 suggests = "wireguard-tools, tailscale, usbmuxd"
 
 [dependencies]

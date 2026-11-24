@@ -41,7 +41,7 @@ fn held_all_the_way_resets() {
 }
 
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("ystreamer-reset-{name}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tmstreamer-reset-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir

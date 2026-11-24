@@ -10,7 +10,7 @@ ExecStart=/usr/bin/tmstreamer run
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=2
-# Keep the upstream-compatible settings and recordings locations.
+# systemd creates the TMStreamer configuration and state directories.
 ConfigurationDirectory=tmstreamer
 StateDirectory=tmstreamer
 # Finishing an open recording can take a few seconds

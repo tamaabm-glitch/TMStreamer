@@ -135,14 +135,13 @@ run = [
 # --- Image ---
 
 [tasks."image:build"]
-description = "Build the SD card image from the newest .deb (needs Docker; about half an hour on a Pi)"
-run = "image/build.sh"
+description = "Disabled: legacy Raspberry Pi image pipeline is not compatible with the TMStreamer/Radxa package"
+run = "echo \"Legacy Raspberry Pi image build is disabled pending migration.\"; exit 1"
 
 [tasks."image:test"]
 description = "Test the image's data-partition setup against simulated SD cards (needs Docker and a previous image build)"
 run = "image/tests/data-partition.sh"
 
 [tasks."image:full"]
-description = "Everything from source: build and sign the .deb, then build the SD card image from it"
-depends = ["device:package"]
-run = "image/build.sh"
+description = "Disabled: do not build or sign an image until the Radxa/TMStreamer image pipeline is replaced"
+run = "echo \"TMStreamer image pipeline is not ready.\"; exit 1"

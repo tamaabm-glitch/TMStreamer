@@ -140,7 +140,8 @@ fn disk_usage(path: &str) -> Option<(u64, u64)> {
 }
 
 const CLOUD_INIT_DIR: &str = "/etc/cloud/cloud.cfg.d";
-const CLOUD_INIT_KEEP: &str = "/etc/cloud/cloud.cfg.d/99-ystreamer-hostname.cfg";
+const CLOUD_INIT_KEEP: &str = "/etc/cloud/cloud.cfg.d/99-tmstreamer-hostname.cfg";
+const CLOUD_INIT_LEGACY_KEEP: &str = "/etc/cloud/cloud.cfg.d/99-ystreamer-hostname.cfg";
 const HOSTS: &str = "/etc/hosts";
 
 pub async fn set_hostname(name: &str) -> Result<(), String> {
@@ -204,6 +205,7 @@ pub fn adopt_timezone(store: &crate::settings::SettingsStore) {
 fn keep_hostname(name: &str) {
     if std::path::Path::new(CLOUD_INIT_DIR).is_dir()
         && !std::path::Path::new(CLOUD_INIT_KEEP).exists()
+        && !std::path::Path::new(CLOUD_INIT_LEGACY_KEEP).exists()
         && let Err(e) = fs::write(CLOUD_INIT_KEEP, "preserve_hostname: true\n")
     {
         eprintln!("[system] {CLOUD_INIT_KEEP}: {e}");

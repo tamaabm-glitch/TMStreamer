@@ -44,15 +44,13 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 
 The ARM64 build produces a package named `tmstreamer`, installs `/usr/bin/tmstreamer`, and provides `tmstreamer.service`.
 
-On a compatible Debian 12 ARM64 device, install the downloaded package with:
+On a compatible Debian 12 ARM64 test device, install the package only after reviewing its control scripts and dependencies:
 
 ```sh
-sudo apt install ./tmstreamer_0.1.2-1_arm64.deb
-sudo systemctl enable --now tmstreamer.service
-sudo systemctl status tmstreamer.service --no-pager
+sudo apt install ./tmstreamer_<version>-1_arm64.deb
 ```
 
-Do not enable or start this service on a device that is currently running MundoStreamer or another DJI receiver until a separately approved cutover plan and hardware acceptance test are complete. Package installation itself does not enable or start the service. This package is not yet certified on Radxa ROCK 3A.
+The package deliberately does not enable or start `tmstreamer.service`. Do not start it on the Radxa while MundoStreamer or another DJI receiver is active. Service activation is a separate, explicitly approved cutover after the DJI input, HDMI output, TM-LIC gates, and rollback procedure pass on the actual hardware. The current package is not yet certified on Radxa ROCK 3A.
 
 ## TM-LIC integration
 
@@ -89,7 +87,7 @@ See mise.toml for the full task list. The Debian package build requires the GStr
 | device/backend/ | Rust service, DJI input, GStreamer and web API |
 | device/frontend/ | Svelte dashboard and visual assets |
 | device/packaging/ | Debian packaging, service unit and install scripts |
-| image/ | Upstream Raspberry Pi image build |
+| image/ | Legacy Raspberry Pi image builder (disabled pending a TMStreamer-specific migration) |
 | site/ | Documentation website |
 
 ## Upstream origin and attribution

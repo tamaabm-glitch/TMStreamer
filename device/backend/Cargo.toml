@@ -33,6 +33,11 @@ assets = [
         "usr/share/ystreamer/tm-lic/public_keys/README.txt",
         "644",
     ],
+    [
+        "../packaging/tm-lic/public_keys/tmstreamer-prod-1.pem",
+        "usr/share/ystreamer/tm-lic/public_keys/tmstreamer-prod-1.pem",
+        "644",
+    ],
 ]
 maintainer-scripts = "../packaging/debian"
 systemd-units = { unit-scripts = "../packaging", restart-after-upgrade = true }

@@ -25,7 +25,9 @@ assets = [
     ],
 ]
 maintainer-scripts = "../packaging/debian"
-systemd-units = { unit-scripts = "../packaging", restart-after-upgrade = true }
+# Install the package without taking over active receiver/USB/HDMI hardware.
+# Enable and start TMStreamer only after the operator validates the Radxa cutover.
+systemd-units = { unit-scripts = "../packaging", restart-after-upgrade = true, enable = false, start = false }
 depends = """$auto,
     gstreamer1.0-plugins-base,
     gstreamer1.0-plugins-good,

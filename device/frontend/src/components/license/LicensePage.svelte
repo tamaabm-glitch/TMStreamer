@@ -98,6 +98,11 @@
       </button>
     </div>
 
+    {#if license.status?.message}
+      <p role="alert" class="mt-4 rounded-lg border border-down/30 bg-down/5 px-3 py-2 text-sm text-down">
+        {license.status.message}
+      </p>
+    {/if}
     {#if license.error}
       <p role="alert" class="mt-4 rounded-lg border border-down/30 bg-down/5 px-3 py-2 text-sm text-down">
         {license.error}

@@ -33,7 +33,7 @@ Initial activation is public so a locked installation can be activated without a
 - DJI input selection, network configuration, HDMI/display configuration, system/update access, logs, and diagnostics remain available while activation is pending.
 - The HDMI pipeline, DJI receiver, and device boot path are not gated by TM-LIC.
 
-The frontend displays the activation page until a valid license is present. It keeps the setup pages above available during activation.
+The frontend displays the activation page until a valid license is present. It keeps the setup pages above available during activation. After activation, license management is available under System → License.
 
 ## Key handling and production readiness
 

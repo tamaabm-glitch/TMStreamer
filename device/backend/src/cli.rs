@@ -136,7 +136,7 @@ fn systemctl(action: &str) -> Result<(), String> {
 }
 
 fn status() {
-    println!("TMStreamer - NEW GALIH MULTIMEDIA {VERSION}");
+    println!("TMStreamer {VERSION}");
     let running = running_version();
     match (&running, service_active()) {
         (Some(version), _) if version != VERSION => {
@@ -309,9 +309,9 @@ fn reset_settings(confirmed: bool) -> Result<(), String> {
     reset::request(&settings::config_path())?;
     if service_active() {
         systemctl("restart")?;
-        println!("Settings reset. YStreamer is restarting with the defaults.");
+        println!("Settings reset. TMStreamer is restarting with the defaults.");
     } else {
-        println!("YStreamer isn't running; the settings are reset when it next starts.");
+        println!("TMStreamer isn't running; the settings are reset when it next starts.");
     }
     Ok(())
 }

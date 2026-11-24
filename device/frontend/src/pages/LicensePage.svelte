@@ -7,6 +7,7 @@
   import Upload from "@lucide/svelte/icons/upload";
   import LockKeyhole from "@lucide/svelte/icons/lock-keyhole";
 
+  let { canActivate = true }: { canActivate?: boolean } = $props();
   let status = $state<LicenseStatus | null>(null);
   let selected = $state<File | null>(null);
   let loading = $state(true);
@@ -122,6 +123,7 @@
         <p class="rounded-lg bg-up/10 p-3 text-xs text-up">{notice}</p>
       {/if}
 
+      {#if canActivate}
       <div class="flex flex-col gap-2 border-t border-line pt-4">
         <label for="tm-license-file" class="text-sm font-medium text-fg">File lisensi TM-LIC (.json)</label>
         <input
@@ -140,6 +142,9 @@
           <button type="button" class={btn.plain} disabled={loading || busy} onclick={refresh}>Periksa ulang</button>
         </div>
       </div>
+      {:else}
+        <p class="border-t border-line pt-4 text-xs text-muted">Login sebagai administrator untuk mengunggah dan mengaktifkan lisensi.</p>
+      {/if}
     </div>
   </section>
 </div>

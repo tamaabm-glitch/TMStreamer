@@ -1,0 +1,51 @@
+name: Format TM-LIC implementation branch
+
+on:
+  push:
+    branches:
+      - tm-lic-v1.3-implementation
+    paths:
+      - .github/workflows/tm-lic-format.yml
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@v7
+        with:
+          ref: tm-lic-v1.3-implementation
+
+      - name: Install project tools
+        uses: jdx/mise-action@v5
+        with:
+          install: true
+
+      - name: Install frontend dependencies
+        working-directory: device/frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Format frontend
+        working-directory: device/frontend
+        run: pnpm format
+
+      - name: Format backend
+        working-directory: device/backend
+        run: cargo fmt
+
+      - name: Commit formatting changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add device/frontend device/backend/src
+          if git diff --cached --quiet; then
+            echo "No formatting changes were required."
+            exit 0
+          fi
+          git commit -m "Apply Prettier and rustfmt formatting"
+          git push origin HEAD:tm-lic-v1.3-implementation

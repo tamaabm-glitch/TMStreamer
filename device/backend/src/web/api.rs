@@ -159,6 +159,10 @@ pub fn router<S>(services: Services) -> Router<S> {
         )
         .route_layer(axum::middleware::from_fn(run_to_completion))
         .route_layer(axum::middleware::from_fn_with_state(
+            services.license.clone(),
+            license::enforce,
+        ))
+        .route_layer(axum::middleware::from_fn_with_state(
             Arc::clone(&services.auth),
             auth::admin_only,
         ))

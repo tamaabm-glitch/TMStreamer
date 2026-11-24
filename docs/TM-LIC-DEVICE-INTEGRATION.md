@@ -26,9 +26,10 @@ The activation endpoint is public so a locked installation can be activated with
 
 ## Feature enforcement
 
-- The `recording` entitlement is required for all `/api/recording` endpoints and recording settings.
-- The `streaming` entitlement is required for RTSP/SRT/RTMP/UDP/browser-viewer settings.
+- The `recording` entitlement is required for all `/api/recording` endpoints, recording settings, auto-start, and the physical record button.
+- The `streaming` entitlement is required for RTSP/SRT/RTMP/UDP outputs, browser video/WebRTC, and their settings.
 - Full settings replacement requires both entitlements.
+- Network outputs start only after entitlements have been applied. A background check stops them and stops active recording when a license expires or its signing key is revoked. Browser video fanout also stops; the DJI control/telemetry channel remains available.
 - DJI input selection, network configuration, HDMI/display configuration, system/update access, logs, and diagnostics remain available while activation is pending.
 - The HDMI pipeline, DJI receiver, and device boot path are not gated by TM-LIC.
 

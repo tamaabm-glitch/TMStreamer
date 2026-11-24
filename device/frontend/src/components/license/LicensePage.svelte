@@ -155,6 +155,7 @@
       <a href="/system" class="rounded-md border border-line px-3 py-2 text-xs font-medium text-fg hover:bg-surface-2">
         System & Updates
       </a>
+      <a href="/login" class="rounded-md border border-line px-3 py-2 text-xs font-medium text-fg hover:bg-surface-2">Log in</a>
     </div>
   </section>
 </div>

@@ -22,7 +22,7 @@ For test or staging environments, the paths can be overridden with:
 - `GET /api/license` returns activation status and Machine ID.
 - `POST /api/license/activate` accepts the raw JSON license envelope (maximum 64 KiB).
 
-The activation endpoint is public so a locked installation can be activated without an administrative session. The license is validated before an atomic write. Only a signed license is stored on the device.
+Initial activation is public so a locked installation can be activated without an administrative session. Replacing an already active license requires an administrator session. The license is validated before an atomic write. Only a signed license is stored on the device.
 
 ## Feature enforcement
 

@@ -95,6 +95,8 @@
       <LoginForm reason="Log in to change settings and control the camera." />
     {:else if isWatchPage}
       <WatchPage title={page.label} bind:theater />
+    {:else if page.id === "license"}
+      <LicensePage manage />
     {:else}
       <PageHeader title={page.label} />
       {#if auth.admin}

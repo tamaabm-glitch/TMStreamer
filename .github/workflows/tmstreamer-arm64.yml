@@ -110,8 +110,8 @@ jobs:
             echo "::error::Debian package version $VERSION does not match Cargo version $CARGO_VERSION-1."
             exit 1
           fi
-          if ! grep -Fq 'restart-after-upgrade = false, enable = false, start = false' device/backend/Cargo.toml; then
-            echo "::error::TMStreamer must not restart, enable, or start automatically during package installation."
+          if ! grep -Fq '../packaging/tmstreamer.service' device/backend/Cargo.toml; then
+            echo "::error::TMStreamer systemd unit must be installed as a passive asset."
             exit 1
           fi
 
@@ -158,12 +158,20 @@ jobs:
           grep -Fqx "StateDirectory=tmstreamer" "$SERVICE"
           test -f "$ROOT/usr/share/tmstreamer/config.txt"
 
-          if grep -Eq "boot/firmware|raspi-config|systemctl[[:space:]]+(start|restart)" "$CONTROL/postinst"; then
-            echo "::error::Package postinst mutates boot settings or starts/restarts services."
+          if grep -Eiq 'boot/firmware|raspi-config|deb-systemd-helper|invoke-rc.d|systemctl[[:space:]]+(start|restart|enable)' "$CONTROL/postinst"; then
+            echo "::error::Package postinst must never enable or start/restart TMStreamer."
             exit 1
           fi
-          if grep -Eq "boot/firmware|raspi-config" "$CONTROL/postrm"; then
-            echo "::error::Package postrm mutates boot settings."
+          if grep -Eiq 'boot/firmware|raspi-config|deb-systemd-helper|invoke-rc.d|systemctl[[:space:]]+(start|restart|enable)' "$CONTROL/postrm"; then
+            echo "::error::Package postrm must not alter boot settings or enable/start services."
+            exit 1
+          fi
+          if ! grep -Fq 'systemctl daemon-reload' "$CONTROL/postinst"; then
+            echo "::error::Package postinst must register the installed unit with systemd."
+            exit 1
+          fi
+          if ! grep -Fq 'systemctl stop tmstreamer.service' "$CONTROL/prerm"; then
+            echo "::error::Package removal must stop an explicitly running TMStreamer service."
             exit 1
           fi
           echo "Verified TMStreamer binary, service, paths and non-invasive package scripts."

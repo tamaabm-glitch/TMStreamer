@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
-# TMStreamer package installation must not edit boot configuration or take
-# ownership of display/USB hardware. Package activation is an explicit later step.
-#DEBHELPER#
+# Register the unit file with systemd, but never enable or start it.
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
+fi

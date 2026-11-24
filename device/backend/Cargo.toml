@@ -23,11 +23,15 @@ assets = [
         "usr/share/tmstreamer/",
         "644",
     ],
+    [
+        "../packaging/tmstreamer.service",
+        "usr/lib/systemd/system/",
+        "644",
+    ],
 ]
 maintainer-scripts = "../packaging/debian"
-# Install the package without taking over active receiver/USB/HDMI hardware.
-# Enable and start TMStreamer only after the operator validates the Radxa cutover.
-systemd-units = { unit-scripts = "../packaging", restart-after-upgrade = false, enable = false, start = false }
+# The service is installed as a passive unit file. Maintainer scripts only
+# reload systemd metadata; activation is always an explicit operator action.
 depends = """$auto,
     gstreamer1.0-plugins-base,
     gstreamer1.0-plugins-good,

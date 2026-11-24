@@ -1,4 +1,6 @@
 #!/bin/sh
 set -e
-# Do not alter Raspberry Pi boot configuration or remove legacy YStreamer data.
-#DEBHELPER#
+# Refresh systemd's view after the unit file is removed.
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
+fi

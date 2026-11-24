@@ -118,7 +118,11 @@ pub fn start(
                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                         let current = services.license.status();
                         if current != previous {
-                            services.apply_entitlements();
+                            // Activation applies new entitlements in its handler.
+                            // This watcher only needs to revoke runtime access.
+                            if !current.licensed {
+                                services.apply_entitlements();
+                            }
                             previous = current;
                         }
                     }

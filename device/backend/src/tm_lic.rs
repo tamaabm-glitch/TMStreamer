@@ -158,7 +158,7 @@ pub fn verify_envelope(
 }
 
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct LicenseStatus {
     pub licensed: bool,
     pub machine_id: Option<String>,

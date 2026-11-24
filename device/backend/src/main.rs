@@ -117,6 +117,7 @@ fn run() -> anyhow::Result<()> {
     let services = api::Services {
         store: Arc::clone(&store),
         auth,
+        license: tm_lic::LicenseService::load(),
         network: Arc::clone(&network),
         rtsp: Arc::clone(&rtsp_server),
         srt: Arc::clone(&srt),

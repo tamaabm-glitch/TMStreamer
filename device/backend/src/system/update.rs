@@ -165,12 +165,12 @@ async fn manifest() -> Result<Manifest, String> {
 async fn fetch(url: &str, into: Option<&Path>) -> Result<String, String> {
     use tokio::process::Command;
 
-    // Only a test's own server may be plain HTTP
-    let protocols = if std::env::var_os(MANIFEST_URL_ENV).is_some() {
-        "=http,https"
-    } else {
-        "=https"
-    };
+    // Production devices must use HTTPS for both manifests and packages.
+    // Plain HTTP is allowed only by unit-test builds using a local test server.
+    #[cfg(test)]
+    let protocols = "=http,https";
+    #[cfg(not(test))]
+    let protocols = "=https";
     let mut curl = Command::new("curl");
     curl.args(["--fail", "--silent", "--show-error", "--location"])
         .args(["--proto", protocols, "--proto-redir", protocols])

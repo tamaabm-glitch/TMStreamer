@@ -287,6 +287,34 @@ impl LicenseService {
         status.licensed && status.features.iter().any(|item| item == feature)
     }
 
+    fn registry_readiness_error(&self) -> Option<String> {
+        let result = (|| -> Result<(), String> {
+            let registry: Value = serde_json::from_slice(
+                &fs::read(&self.registry_path)
+                    .map_err(|e| format!("Registry lisensi tidak tersedia: {e}"))?,
+            )
+            .map_err(|_| "Format registry lisensi tidak valid".to_string())?;
+            if registry.get("format").and_then(Value::as_str) != Some("TM-LIC-KEY-REGISTRY")
+                || registry.get("version").and_then(Value::as_u64) != Some(1)
+            {
+                return Err("Format atau versi registry lisensi tidak didukung".into());
+            }
+            let key_id = string_field(&registry, "active_key_id")?;
+            let entry = registry
+                .get("keys")
+                .and_then(|keys| keys.get(&key_id))
+                .ok_or_else(|| "Kunci publik produksi belum didaftarkan".to_string())?;
+            if entry.get("algorithm").and_then(Value::as_str) != Some("Ed25519")
+                || entry.get("status").and_then(Value::as_str) != Some("active")
+            {
+                return Err("Kunci publik produksi belum aktif".into());
+            }
+            read_public_key(&self.public_key_dir.join(format!("{key_id}.pem")))?;
+            Ok(())
+        })();
+        result.err()
+    }
+
     pub fn status(&self) -> LicenseStatus {
         let machine_id = match &self.machine_id {
             Ok(value) => value.clone(),
@@ -311,7 +339,7 @@ impl LicenseService {
                 tier: None,
                 features: vec![],
                 expires_at: None,
-                message: None,
+                message: self.registry_readiness_error(),
             };
         }
         let result = (|| -> Result<VerifiedLicense, String> {
@@ -700,6 +728,38 @@ mod tests {
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("machine_id"), "TM-BROKEN").unwrap();
         assert!(load_or_create_machine_id(&dir).is_err());
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn reports_unprovisioned_public_key_registry_before_activation() {
+        let dir = std::env::temp_dir().join(format!(
+            "tm-lic-unprovisioned-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let registry_path = dir.join("registry.json");
+        let registry = serde_json::json!({
+            "format": "TM-LIC-KEY-REGISTRY",
+            "version": 1,
+            "active_key_id": "tmstreamer-prod-1",
+            "keys": {}
+        });
+        fs::write(&registry_path, serde_json::to_vec(&registry).unwrap()).unwrap();
+        let service = LicenseService {
+            state_dir: dir.join("state"),
+            public_key_dir: dir.join("public_keys"),
+            registry_path,
+            machine_id: Ok("TM-0123456789ABCDEF0123456789ABCDEF".into()),
+            lock: std::sync::Arc::new(std::sync::Mutex::new(())),
+        };
+        let status = service.status();
+        assert!(!status.licensed);
+        assert!(status.message.as_deref().unwrap().contains("belum didaftarkan"));
         let _ = fs::remove_dir_all(dir);
     }
 

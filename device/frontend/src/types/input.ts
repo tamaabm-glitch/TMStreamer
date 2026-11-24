@@ -36,8 +36,16 @@ export interface LegacyStatus {
   captured: number | null;
 }
 
+/** The USB-C DJI link: goggles send H.264, RC-N remotes send H.265. */
+export interface DjiStatus {
+  codec: "h264" | "h265" | null;
+  converter: "hardware" | null;
+  error: string | null;
+}
+
 export interface InputStatus {
   mode: InputMode;
+  dji: DjiStatus;
   uvc: UvcStatus;
   legacy: LegacyStatus;
 }

@@ -34,6 +34,8 @@ depends = """$auto,
     gstreamer1.0-plugins-bad,
     gstreamer1.0-plugins-ugly,
     gstreamer1.0-libav,
+    gstreamer1.0-tools,
+    ffmpeg,
     network-manager, dnsmasq-base, wpasupplicant, iw, iproute2, avahi-daemon,
     udisks2, kmod, util-linux, passwd, systemd, curl, ca-certificates, tzdata, python3"""
 recommends = "openssh-server"

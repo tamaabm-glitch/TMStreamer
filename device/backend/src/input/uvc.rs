@@ -564,6 +564,12 @@ fn build(
     let keyframe = m.fps * cfg.keyframe_secs;
     let encode = match a.encoder {
         Encoder::Passthrough => String::new(),
+        Encoder::Hardware if gst::ElementFactory::find("mpph264enc").is_some() => format!(
+            "{logo}videoconvert ! video/x-raw,format=NV12 ! \
+             mpph264enc rc-mode=cbr bps={} gop={keyframe} ! \
+             video/x-h264,level=(string)4,profile=(string)high ! ",
+            cfg.bitrate_kbps * 1000,
+        ),
         Encoder::Hardware => format!(
             "{logo}videoconvert ! video/x-raw,format=I420 ! \
              v4l2h264enc extra-controls=\"controls,video_bitrate={},h264_i_frame_period={keyframe},repeat_sequence_header=1\" ! \

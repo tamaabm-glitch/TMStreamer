@@ -24,7 +24,7 @@
     dji_fpv: "DJI Goggles 2, Integra, 3 or N3 connected to the USB-C port.",
     dji_fpv_legacy:
       "The first DJI FPV Goggles, V1 or V2, in one of the USB-A ports. Video only: no camera settings, battery or link quality.",
-    uvc: "An analog receiver, HDMI capture stick or webcam in one of the USB-A ports. Its video is encoded to H.264 by the Pi's hardware encoder.",
+    uvc: "An analog receiver, HDMI capture stick or webcam in one of the USB-A ports. Its video is encoded to H.264 by the device's hardware encoder when available.",
   };
 
   const FORMAT: Record<string, string> = {

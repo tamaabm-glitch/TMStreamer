@@ -174,14 +174,33 @@ fn run() -> anyhow::Result<()> {
         });
     }
 
+    let mut video = {
+        let goggles = goggles.clone();
+        input::dji::DjiVideo::new(
+            Arc::clone(&fanout),
+            Box::new(move |frame: &[u8]| {
+                if let Err(e) = goggles.send(frame) {
+                    eprintln!("[video] couldn't reach the remote: {e}");
+                }
+            }),
+        )
+    };
     let mut last_mode = None;
     let alive = goggles.clone();
+    let mut duml_generation = alive.generation();
     goggles.run(|data| {
+        // Discard a partial packet from the previous USB session. RC-N remotes
+        // send their codec parameter sets only when a new link comes up.
+        let generation = alive.generation();
+        if generation != duml_generation {
+            duml_generation = generation;
+            duml.clear();
+        }
         duml.process(
             data,
             |chunk| {
                 alive.mark_alive();
-                if fanout.video(InputMode::DjiFpv, chunk) {
+                if video.push(alive.generation(), chunk) {
                     chunk_count.fetch_add(1, Ordering::Relaxed);
                 }
             },

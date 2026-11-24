@@ -116,6 +116,12 @@ impl DumlReassemblyBuffer {
         }
     }
 
+    /// Clear a partial frame when a USB connection is replaced. Bytes from
+    /// the previous device must never be joined to the next session.
+    pub fn clear(&mut self) {
+        self.buf.clear();
+    }
+
     pub fn process(
         &mut self,
         data: &[u8],

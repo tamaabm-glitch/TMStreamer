@@ -23,7 +23,7 @@ const WRITE_TIMEOUT: Duration = Duration::from_secs(2);
 const VIDEO_GONE: Duration = Duration::from_secs(2);
 const RETRY: Duration = Duration::from_secs(1);
 
-pub const CAPTURE_PATH: &str = "/tmp/ystreamer-fpv-goggles.h264";
+pub const CAPTURE_PATH: &str = "/tmp/tmstreamer-fpv-goggles.h264";
 const CAPTURE_BYTES: usize = 8 * 1024 * 1024;
 
 #[derive(Serialize, Clone, Copy, Default, PartialEq, Debug)]

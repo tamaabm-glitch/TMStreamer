@@ -34,7 +34,7 @@ Availability depends on the connected DJI device, kernel, USB gadget configurati
 
 - Preserve DJI DUML parsing, USB handling, camera control, GStreamer pipelines, streaming, HDMI and recording unless a change is separately tested.
 - Debian package identity is `tmstreamer`; the systemd unit is `tmstreamer.service`.
-- The executable is `/usr/bin/tmstreamer`. Existing settings in `/etc/ystreamer` and state in `/var/lib/ystreamer` are read only as migration fallbacks when the corresponding TMStreamer paths do not yet exist.
+- The executable is `/usr/bin/tmstreamer`. Existing settings in `/etc/ystreamer` and recordings in `/var/lib/ystreamer` remain recognized as legacy compatibility locations; new recordings use `/var/lib/tmstreamer`. Legacy data is not deleted or moved automatically.
 - Never fabricate or reuse upstream signing keys, user credentials, activation secrets or TM-LIC private keys.
 - Keep TM-LIC activation and validation independent from upstream licensing.
 - Test on Radxa ROCK 3A hardware before declaring an installer ready.

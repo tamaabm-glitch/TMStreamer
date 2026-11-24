@@ -42,19 +42,19 @@ adjacent `.deb.sig` file. Do not upload the private key or rely on an
 unsigned CI artifact as a production release.
 
 Create a **non-draft, non-prerelease** GitHub Release with tag
-`v<version>`, for example `v0.1.3`. Generate its manifest using that exact
+`v<version>`, for example `v0.1.5`. Generate its manifest using that exact
 release's download base URL:
 
 ```sh
-RELEASE_TAG="v0.1.3"
+RELEASE_TAG="v0.1.5"
 RELEASE_BASE="https://github.com/tamaabm-glitch/TMStreamer/releases/download/$RELEASE_TAG"
-sh device/packaging/manifest.sh path/to/tmstreamer_0.1.3-1_arm64.deb "$RELEASE_BASE"
+sh device/packaging/manifest.sh path/to/tmstreamer_0.1.5-1_arm64.deb "$RELEASE_BASE"
 sh device/packaging/sign.sh path/to/manifest.json
 ```
 
 Upload these three files as assets to the same GitHub Release:
 
-- `tmstreamer_0.1.3-1_arm64.deb`
+- `tmstreamer_0.1.5-1_arm64.deb`
 - `manifest.json`
 - `manifest.json.sig`
 

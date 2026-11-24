@@ -105,8 +105,13 @@ jobs:
             exit 1
           fi
 
-          if [ "$VERSION" != "0.1.5-1" ]; then
-            echo "::error::Unexpected package version: $VERSION"
+          CARGO_VERSION="$(awk '/^\[package\]/{in_package=1; next} /^\[/{in_package=0} in_package && /^version = / {gsub(/"/, "", $3); print $3; exit}' device/backend/Cargo.toml)"
+          if [ -z "$CARGO_VERSION" ] || [ "$VERSION" != "${CARGO_VERSION}-1" ]; then
+            echo "::error::Debian package version $VERSION does not match Cargo version $CARGO_VERSION-1."
+            exit 1
+          fi
+          if ! grep -Fq 'restart-after-upgrade = false, enable = false, start = false' device/backend/Cargo.toml; then
+            echo "::error::TMStreamer must not restart, enable, or start automatically during package installation."
             exit 1
           fi
 

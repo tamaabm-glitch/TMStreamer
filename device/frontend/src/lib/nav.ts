@@ -10,7 +10,6 @@ import Cable from "@lucide/svelte/icons/cable";
 import Activity from "@lucide/svelte/icons/activity";
 import ScrollText from "@lucide/svelte/icons/scroll-text";
 import SquareTerminal from "@lucide/svelte/icons/square-terminal";
-import KeyRound from "@lucide/svelte/icons/key-round";
 
 export interface NavTab {
   id: string;
@@ -122,6 +121,7 @@ export const SETTINGS_PAGES: NavPage[] = [
       { id: "general", label: "General", sections: ["device"] },
       { id: "about", label: "About", sections: [] },
       { id: "updates", label: "Updates", sections: ["advanced"] },
+      { id: "license", label: "License", sections: [] },
       { id: "service", label: "Service", sections: [] },
       { id: "configuration", label: "Configuration", sections: [] },
       {
@@ -131,12 +131,6 @@ export const SETTINGS_PAGES: NavPage[] = [
         developer: true,
       },
     ],
-  },
-  {
-    id: "license",
-    label: "License",
-    sections: [],
-    icon: KeyRound,
   },
   {
     id: "terminal",
@@ -149,7 +143,7 @@ export const SETTINGS_PAGES: NavPage[] = [
 
 export const NAV_GROUPS: { label: string; pages: NavPage[] }[] = [
   ["Video", ["input", "streaming", "recording", "display"]],
-  ["Device", ["network", "system", "license"]],
+  ["Device", ["network", "system"]],
   ["Diagnostics", ["performance", "logs", "terminal"]],
 ].map(([label, ids]) => ({
   label: label as string,

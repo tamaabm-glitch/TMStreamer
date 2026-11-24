@@ -1,6 +1,6 @@
 mod access;
 mod display;
-mod license;
+pub mod license;
 mod network;
 mod recording;
 mod settings;

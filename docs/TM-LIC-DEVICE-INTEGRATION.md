@@ -39,6 +39,4 @@ The frontend displays the activation page until a valid license is present. It k
 
 Never put a private signing key on the device, in this repository, or in a Debian package. The device only needs the public key registry, public PEM key, and signed license.
 
-The sample key and signed sample license distributed in the TM-LIC v1.0 archive are used only by a verifier compatibility test. They are not production signing material. Create a fresh production Ed25519 keypair on a trusted issuer workstation, retain the private key there, and add only the public PEM plus matching registry to the packaging source after the key rotation has been completed.
-
-Until production public key material is provisioned, the activation endpoint correctly reports that the registry is unavailable and cannot activate production licenses.
+The sample key and signed sample license distributed in the TM-LIC v1.0 archive are used only by a verifier compatibility test. They are not production signing material. The packaged registry is deliberately a placeholder (`PRODUCTION_KEY_REQUIRED`) with no active key entries, so it cannot validate any production license yet. Create a fresh production Ed25519 keypair on a trusted issuer workstation, retain the private key there, and replace the placeholder registry plus add only the matching public PEM to `device/packaging/tm-lic/` before producing a release package.

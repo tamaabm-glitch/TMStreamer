@@ -46,15 +46,7 @@ struct LicenseRequired {
     code: &'static str,
 }
 
-pub(crate) async fn enforce(
-    axum::extract::State(license): axum::extract::State<crate::tm_lic::LicenseService>,
-    request: Request,
-    next: Next,
-) -> Response {
-    let path = request.uri().path();
-    let path = path.strip_prefix("/api").unwrap_or(path);
-    let method = request.method();
-
+fn required_features(path: &str, method: &axum::http::Method) -> &'static [&'static str] {
     let recording_settings = path == "/settings/recording" && *method == axum::http::Method::PUT;
     let streaming_settings = matches!(
         path,
@@ -65,15 +57,25 @@ pub(crate) async fn enforce(
             | "/settings/viewer"
     ) && *method == axum::http::Method::PUT;
 
-    let required_features: &[&str] = if path.starts_with("/recording") || recording_settings {
+    if path.starts_with("/recording") || recording_settings {
         &["recording"]
-    } else if streaming_settings || matches!(path, "/offer" | "/video") {
+    } else if streaming_settings || matches!(path, "/offer" | "/video" | "/control") {
         &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
         &["recording", "streaming"]
     } else {
         &[]
-    };
+    }
+}
+
+pub(crate) async fn enforce(
+    axum::extract::State(license): axum::extract::State<crate::tm_lic::LicenseService>,
+    request: Request,
+    next: Next,
+) -> Response {
+    let path = request.uri().path();
+    let path = path.strip_prefix("/api").unwrap_or(path);
+    let required_features = required_features(path, request.method());
 
     for feature in required_features {
         if !license.has_feature(feature) {
@@ -100,4 +102,41 @@ pub(crate) async fn enforce(
     }
 
     next.run(request).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::required_features;
+    use axum::http::Method;
+
+    #[test]
+    fn gates_all_streaming_websocket_routes() {
+        for path in ["/offer", "/video", "/control"] {
+            assert_eq!(required_features(path, &Method::GET), &["streaming"]);
+        }
+    }
+
+    #[test]
+    fn gates_recording_routes_and_settings() {
+        assert_eq!(required_features("/recording/start", &Method::POST), &["recording"]);
+        assert_eq!(required_features("/settings/recording", &Method::PUT), &["recording"]);
+    }
+
+    #[test]
+    fn gates_streaming_settings_and_full_settings_replacement() {
+        assert_eq!(required_features("/settings/srt", &Method::PUT), &["streaming"]);
+        assert_eq!(required_features("/settings", &Method::PUT), &["recording", "streaming"]);
+    }
+
+    #[test]
+    fn keeps_device_setup_and_hdmi_available_without_license() {
+        for path in ["/auth", "/license", "/network", "/input", "/display", "/system", "/system/logs"] {
+            assert!(required_features(path, &Method::GET).is_empty(), "{path}");
+        }
+    }
+
+    #[test]
+    fn does_not_gate_streaming_settings_reads() {
+        assert!(required_features("/settings/srt", &Method::GET).is_empty());
+    }
 }

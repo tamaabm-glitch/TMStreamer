@@ -37,6 +37,7 @@ pub struct Services {
     pub store: Arc<SettingsStore>,
     pub auth: Arc<Auth>,
     pub license: crate::tm_lic::LicenseService,
+    pub streaming_enabled: Arc<std::sync::atomic::AtomicBool>,
     pub network: Arc<Network>,
     pub rtsp: Arc<RtspServer>,
     pub srt: Arc<SrtOutput>,
@@ -64,6 +65,7 @@ impl Services {
         let status = self.license.status();
         let streaming = status.licensed && status.features.iter().any(|f| f == "streaming");
         let recording = status.licensed && status.features.iter().any(|f| f == "recording");
+        self.streaming_enabled.store(streaming, std::sync::atomic::Ordering::Relaxed);
 
         let mut rtsp = cfg.rtsp.clone();
         rtsp.enabled &= streaming;

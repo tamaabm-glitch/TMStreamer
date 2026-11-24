@@ -208,6 +208,11 @@ impl Recorder {
     }
 
     fn start_session(&self, automatic: bool) -> Result<(), String> {
+        // Also protects hardware-triggered and automatic starts, which do not
+        // pass through the HTTP API middleware.
+        if !crate::web::api::license::feature_enabled("recording") {
+            return Err("Recording requires a valid TM-LIC recording entitlement".into());
+        }
         let mut guard = self.session.lock().unwrap();
         if guard.is_some() {
             return Err("Already recording".into());

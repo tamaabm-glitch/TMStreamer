@@ -5,7 +5,7 @@
 
 use std::{fs, path::Path};
 
-use base64::{engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD}, Engine as _};
+use base64::{engine::general_purpose::{STANDARD, URL_SAFE, URL_SAFE_NO_PAD}, Engine as _};
 use ed25519_dalek::{Signature, VerifyingKey};
 use serde_json::Value;
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
@@ -82,6 +82,15 @@ pub fn verify_envelope(
         return Err("Machine ID tidak cocok".into());
     }
 
+    if registry.get("format").and_then(Value::as_str) != Some("TM-LIC-KEY-REGISTRY")
+        || registry.get("version").and_then(Value::as_u64) != Some(1)
+    {
+        return Err("Format atau versi registry tidak didukung".into());
+    }
+    if registry.get("active_key_id").and_then(Value::as_str) != Some(key_id.as_str()) {
+        return Err("Key ID lisensi bukan active key".into());
+    }
+
     let key_entry = registry.get("keys")
         .and_then(|v| v.get(&key_id))
         .ok_or_else(|| "Key ID tidak terdaftar".to_string())?;
@@ -92,7 +101,8 @@ pub fn verify_envelope(
     }
 
     let public_key = read_public_key(&public_key_dir.join(format!("{key_id}.pem")))?;
-    let signature_bytes = URL_SAFE_NO_PAD.decode(signature_text)
+    let signature_bytes = URL_SAFE_NO_PAD.decode(&signature_text)
+        .or_else(|_| URL_SAFE.decode(&signature_text))
         .map_err(|_| "Encoding signature tidak valid".to_string())?;
     let signature = Signature::from_slice(&signature_bytes)
         .map_err(|_| "Panjang signature tidak valid".to_string())?;

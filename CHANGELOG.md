@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Use the TMStreamer theme preference during the initial page bootstrap and migrate the old theme key without losing the selected appearance.
+
 ## 0.1.5
 
 - Use TMStreamer names for fresh NetworkManager and WireGuard profiles while preserving existing legacy profiles until the user reapplies settings.

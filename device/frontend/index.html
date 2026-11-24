@@ -9,7 +9,13 @@
     <title>TMStreamer</title>
     <script>
       try {
-        const theme = localStorage.getItem("ystreamer.theme");
+        const currentTheme = localStorage.getItem("tmstreamer.theme");
+        const legacyTheme = currentTheme === null ? localStorage.getItem("ystreamer.theme") : null;
+        const theme = currentTheme ?? legacyTheme;
+        if (currentTheme === null && legacyTheme !== null) {
+          localStorage.setItem("tmstreamer.theme", legacyTheme);
+          localStorage.removeItem("ystreamer.theme");
+        }
         if (theme === "light") { document.documentElement.classList.add("light"); document.documentElement.style.colorScheme = "light"; }
         else { document.documentElement.classList.add("dark"); document.documentElement.style.colorScheme = "dark"; }
       } catch { document.documentElement.classList.add("dark"); document.documentElement.style.colorScheme = "dark"; }

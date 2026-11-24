@@ -181,12 +181,12 @@ async fn manifest() -> Result<Manifest, String> {
     let manifest: Manifest = serde_json::from_str(&text)
         .map_err(|_| "The update server sent something unexpected".to_string())?;
     for package in manifest.packages.values() {
-        validate_release_package_url(&package.url)?;
+        validate_release_package_url(&package.url, &manifest.version)?;
     }
     Ok(manifest)
 }
 
-fn validate_release_package_url(url: &str) -> Result<(), String> {
+fn validate_release_package_url(url: &str, expected_version: &str) -> Result<(), String> {
     let asset = url
         .strip_prefix(OFFICIAL_PACKAGE_PREFIX)
         .ok_or("TMStreamer packages must be downloaded from official GitHub Releases")?;
@@ -201,7 +201,7 @@ fn validate_release_package_url(url: &str) -> Result<(), String> {
             && !value.contains("..")
     };
     if parts.next().is_some()
-        || !tag.starts_with('v')
+        || tag != format!("v{expected_version}")
         || !safe_component(tag)
         || !filename.starts_with("tmstreamer_")
         || !filename.ends_with(".deb")

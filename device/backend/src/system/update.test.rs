@@ -14,12 +14,11 @@ fn test_public_key() -> String {
 }
 
 fn test_signature(message: &[u8]) -> String {
-    base64::engine::general_purpose::STANDARD
-        .encode(test_signing_key().sign(message).to_bytes())
+    base64::engine::general_purpose::STANDARD.encode(test_signing_key().sign(message).to_bytes())
 }
 
 #[test]
-fn release_key_accepts_what_sign_sh_signed() {
+fn test_signing_key_accepts_matching_signature() {
     let public_key = test_public_key();
     let signature = test_signature(MESSAGE);
     assert_eq!(verify(&public_key, MESSAGE, &signature), Ok(()));
@@ -39,8 +38,8 @@ fn changed_package_is_refused() {
 #[test]
 fn signature_from_another_key_is_refused() {
     let other = SigningKey::from_bytes(&[0x24; 32]);
-    let other_signature = base64::engine::general_purpose::STANDARD
-        .encode(other.sign(MESSAGE).to_bytes());
+    let other_signature =
+        base64::engine::general_purpose::STANDARD.encode(other.sign(MESSAGE).to_bytes());
     assert!(verify(&test_public_key(), MESSAGE, &other_signature).is_err());
 }
 

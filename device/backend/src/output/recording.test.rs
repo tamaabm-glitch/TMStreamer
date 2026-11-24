@@ -103,3 +103,32 @@ fn knows_when_the_drive_is_gone() {
         &[]
     ));
 }
+
+#[test]
+fn license_stop_preserves_auto_record_intent_for_reactivation() {
+    let cfg = RecordingSettings {
+        auto_start: true,
+        ..RecordingSettings::default()
+    };
+    let recorder = Recorder::new(cfg);
+    recorder.auto_start_pending.store(false, Ordering::Relaxed);
+
+    recorder.stop_for_license();
+
+    assert!(recorder.auto_start_pending.load(Ordering::Relaxed));
+}
+
+#[test]
+fn license_stop_does_not_arm_auto_record_when_disabled() {
+    let cfg = RecordingSettings {
+        auto_start: false,
+        ..RecordingSettings::default()
+    };
+    let recorder = Recorder::new(cfg);
+    recorder.auto_start_pending.store(true, Ordering::Relaxed);
+
+    recorder.stop_for_license();
+
+    assert!(!recorder.auto_start_pending.load(Ordering::Relaxed));
+}
+

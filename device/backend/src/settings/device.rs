@@ -19,23 +19,13 @@ impl Default for DeviceSettings {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 #[serde(default)]
 pub struct AdvancedSettings {
     pub verbose_logs: bool,
     pub terminal: bool,
-    /// Ask the update server now and then whether there's a newer version
+    /// Ask the TMStreamer update service whether there's a newer version
     pub check_for_updates: bool,
-}
-
-impl Default for AdvancedSettings {
-    fn default() -> Self {
-        Self {
-            verbose_logs: false,
-            terminal: false,
-            check_for_updates: false,
-        }
-    }
 }
 
 pub fn validate_hostname(h: &str) -> Result<(), String> {

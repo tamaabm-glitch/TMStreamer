@@ -30,6 +30,11 @@
 
   let theater = $state(false);
   let licenseStatus = $state<LicenseStatus | null>(null);
+  let licenseTimer: ReturnType<typeof setInterval> | null = null;
+
+  async function refreshLicense() {
+    try { licenseStatus = await api.licenseStatus(); } catch { licenseStatus = null; }
+  }
   const streamingLicensed = $derived(
     licenseStatus?.product === "TMSTREAMER" &&
     licenseStatus?.license_system === "TM-LIC" &&
@@ -57,11 +62,13 @@
 
   onMount(async () => {
     await auth.load();
-    try { licenseStatus = await api.licenseStatus(); } catch { licenseStatus = null; }
+    await refreshLicense();
+    licenseTimer = setInterval(() => void refreshLicense(), 30_000);
     connect();
     auth.onChange(connect);
   });
   onDestroy(() => {
+    if (licenseTimer) clearInterval(licenseTimer);
     control.disconnect();
   });
 </script>

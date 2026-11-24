@@ -64,8 +64,8 @@ fn setup(configfs: &Path, controllers: &Path) -> Result<Outcome, String> {
     put("bDeviceSubClass", "0xFF")?;
     put("bDeviceProtocol", "0x00")?;
     put("strings/0x409/serialnumber", "0123456789ABCDEF")?;
-    put("strings/0x409/manufacturer", "YStreamer")?;
-    put("strings/0x409/product", "YStreamer Goggles Adapter")?;
+    put("strings/0x409/manufacturer", "TMStreamer")?;
+    put("strings/0x409/product", "TMStreamer Goggles Adapter")?;
     put("configs/c.1/strings/0x409/configuration", "Config 1: AOA")?;
     put("configs/c.1/MaxPower", "250")?;
 

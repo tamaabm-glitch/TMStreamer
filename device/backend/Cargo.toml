@@ -23,6 +23,16 @@ assets = [
         "usr/share/ystreamer/",
         "644",
     ],
+    [
+        "../packaging/tm-lic/registry.json",
+        "usr/share/ystreamer/tm-lic/registry.json",
+        "644",
+    ],
+    [
+        "../packaging/tm-lic/public_keys/README.txt",
+        "usr/share/ystreamer/tm-lic/public_keys/README.txt",
+        "644",
+    ],
 ]
 maintainer-scripts = "../packaging/debian"
 systemd-units = { unit-scripts = "../packaging", restart-after-upgrade = true }

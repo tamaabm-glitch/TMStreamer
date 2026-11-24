@@ -10,20 +10,19 @@ use serde::{Deserialize, Serialize};
 use crate::net::network::run;
 use crate::settings::SettingsStore;
 
-/// No TMStreamer release key has been provisioned on this build.
-/// Keep the production updater closed until the operator installs the
-/// TMStreamer-owned public key through the supported release configuration.
+/// The public release key is embedded at build time. It is not secret;
+/// the matching private key must remain on the release operator's signer.
 fn update_public_key() -> Result<&'static str, String> {
-    Err("TMStreamer update signing key is not configured".into())
+    option_env!("TMSTREAMER_UPDATE_PUBLIC_KEY")
+        .filter(|key| !key.trim().is_empty())
+        .ok_or_else(|| "TMStreamer update signing key is not configured".into())
 }
 
-/// TMStreamer updates are intentionally disabled until its own signed
-/// release service and signing key are provisioned. Never fall back to the
-/// upstream YStreamer manifest.
+/// The manifest is supplied at runtime; never fall back to the upstream URL.
 const MANIFEST_URL_ENV: &str = "TMSTREAMER_UPDATE_URL";
-// No TMStreamer-owned update signing key/service has been provisioned yet.
-// Keep every install path closed rather than trusting the upstream vendor key.
-const UPDATE_PIPELINE_ENABLED: bool = false;
+// Builds without the TMStreamer-owned public key remain unable to install.
+const UPDATE_PIPELINE_ENABLED: bool =
+    matches!(option_env!("TMSTREAMER_UPDATE_PUBLIC_KEY"), Some(key) if !key.is_empty());
 const MAX_PACKAGE_BYTES: u64 = 64 << 20;
 const PACKAGE: &str = "tmstreamer";
 /// Long enough after starting for the network to be up
@@ -358,7 +357,7 @@ fn verify(public_key: &str, deb: &[u8], signature: &str) -> Result<(), String> {
         .ok()
         .and_then(|bytes| <[u8; 32]>::try_from(bytes).ok())
         .and_then(|bytes| VerifyingKey::from_bytes(&bytes).ok())
-        .expect("update key is valid");
+        .ok_or("TMStreamer update public key is invalid")?;
     let signature = decode(signature)
         .ok()
         .and_then(|bytes| Signature::from_slice(&bytes).ok())

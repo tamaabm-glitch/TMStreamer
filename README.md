@@ -61,7 +61,7 @@ The integration uses the TM-LIC verifier as the only entitlement authority; it d
 - The dashboard accepts a signed TM-LIC JSON license file. The backend verifies the staged file against the device identity and registered public key before atomically replacing `/data/state/tm-lic/licenses/TMStreamer-LICENSE.json`. An invalid file does not replace an existing license.
 - Streaming and DVR routes/settings require the corresponding `streaming` and `recording` entitlements. Startup also keeps paid outputs and the physical recording trigger disabled when verification fails.
 - Receiver, camera control (`/control`), network, display and HDMI setup remain available without a license.
-- Restart `tmstreamer.service` after a new license is activated so output transports disabled during startup can be initialized with the newly verified entitlement.
+- A newly activated license is applied live: the backend re-applies the configured streaming transports and recording settings without requiring a service restart. If a transport cannot initialize, check the TMStreamer service log for its specific error.
 
 The device package declares Python 3 because the TM-LIC verifier is a separate runtime installed alongside TMStreamer. The issuer's private signing key must remain off the device.
 

@@ -89,32 +89,32 @@ fn release_manifest_and_debian_package_versions_must_match_and_advance() {
 #[test]
 fn only_official_github_release_package_urls_are_accepted() {
     assert!(validate_release_package_url(
-        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer_0.1.3-1_arm64.deb"
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer_0.1.3-1_arm64.deb", "0.1.3"
     )
     .is_ok());
-    assert!(validate_release_package_url("https://example.com/tmstreamer.deb").is_err());
+    assert!(validate_release_package_url("https://example.com/tmstreamer.deb", "0.1.3").is_err());
     assert!(
         validate_release_package_url(
-            "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb"
+            "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb", "0.1.3"
         )
         .is_err()
     );
     assert!(
         validate_release_package_url(
-            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb"
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb", "0.1.3"
         )
         .is_err()
     );
     assert!(validate_release_package_url(
-        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/%2e%2e/evil.deb"
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/%2e%2e/evil.deb", "0.1.3"
     )
     .is_err());
     assert!(validate_release_package_url(
-        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/other-package.deb"
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/other-package.deb", "0.1.3"
     )
     .is_err());
     assert!(validate_release_package_url(
-        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer.deb/extra"
+        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/tmstreamer.deb/extra", "0.1.3"
     )
     .is_err());
 }

@@ -115,7 +115,7 @@ dir = "device/backend"
 run = "cargo deb"
 
 [tasks."device:sign"]
-description = "Sign the newest .deb for the web interface's updater (key: ~/ystreamer-signing-key.pem)"
+description = "Sign the newest TMStreamer .deb for the web interface updater (key: ~/.config/tmstreamer/release-signing-ed25519.pem)"
 dir = "device"
 run = "packaging/sign.sh \"$(ls -t backend/target/debian/*.deb | head -1)\""
 
@@ -126,7 +126,7 @@ dir = "device"
 run = "packaging/sign.sh \"$(ls -t backend/target/debian/*.deb | head -1)\""
 
 [tasks."device:serve-release"]
-description = "Serve the newest signed .deb as a release on http://localhost:8099 for testing updates (run the device with YSTREAMER_UPDATE_URL=http://localhost:8099/manifest.json)"
+description = "Serve the newest signed TMStreamer .deb locally for update-pipeline tests (TMSTREAMER_UPDATE_URL=http://localhost:8099/manifest.json)"
 dir = "device"
 run = [
     "packaging/manifest.sh \"$(ls -t backend/target/debian/*.deb | head -1)\" http://localhost:8099",

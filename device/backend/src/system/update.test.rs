@@ -53,6 +53,13 @@ fn junk_signature_is_refused() {
 }
 
 #[test]
+fn malformed_public_key_is_rejected_without_panicking() {
+    let signature = test_signature(MESSAGE);
+    assert!(verify("not base64!", MESSAGE, &signature).is_err());
+    assert!(verify("c2hvcnQ=", MESSAGE, &signature).is_err());
+}
+
+#[test]
 fn packaging_revision_is_dropped_from_the_version() {
     assert_eq!(display_version("0.1.0-1"), "0.1.0");
     assert_eq!(display_version("0.2.0"), "0.2.0");

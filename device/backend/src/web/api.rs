@@ -1,5 +1,6 @@
 mod access;
 mod display;
+pub(crate) mod license;
 mod network;
 mod recording;
 mod settings;
@@ -35,6 +36,9 @@ use crate::web::auth::{self, Auth};
 pub struct Services {
     pub store: Arc<SettingsStore>,
     pub auth: Arc<Auth>,
+    pub license: crate::tm_lic::LicenseService,
+    pub streaming_enabled: Arc<std::sync::atomic::AtomicBool>,
+    pub applied_license_status: Arc<std::sync::Mutex<crate::tm_lic::LicenseStatus>>,
     pub network: Arc<Network>,
     pub rtsp: Arc<RtspServer>,
     pub srt: Arc<SrtOutput>,
@@ -55,11 +59,56 @@ pub struct Services {
     pub legacy: Arc<crate::input::legacy::LegacySource>,
 }
 
+impl Services {
+    /// Start or stop licensed features without touching the DJI input or HDMI path.
+    pub fn apply_entitlements(&self) {
+        let cfg = self.store.get();
+        let status = self.license.status();
+        let streaming = status.licensed && status.features.iter().any(|f| f == "streaming");
+        let recording = status.licensed && status.features.iter().any(|f| f == "recording");
+        self.streaming_enabled
+            .store(streaming, std::sync::atomic::Ordering::Relaxed);
+
+        let mut rtsp = cfg.rtsp.clone();
+        rtsp.enabled &= streaming;
+        if let Err(error) = self.rtsp.apply(&rtsp) {
+            eprintln!("[license] RTSP not started: {error}");
+        }
+
+        let mut srt = cfg.srt.clone();
+        srt.enabled &= streaming;
+        if let Err(error) = self.srt.apply(&srt) {
+            eprintln!("[license] SRT not started: {error}");
+        }
+
+        let mut rtmp = cfg.rtmp.clone();
+        rtmp.enabled &= streaming;
+        self.rtmp.apply(&rtmp);
+
+        let mut udp = cfg.udp.clone();
+        udp.enabled &= streaming;
+        if let Err(error) = self.udp.apply(&udp) {
+            eprintln!("[license] UDP not started: {error}");
+        }
+
+        self.recorder.set_enabled(recording);
+        let mut button = cfg.recording.button.clone();
+        button.enabled &= recording;
+        self.button.configure(&button);
+        *self.applied_license_status.lock().unwrap() = status;
+    }
+}
+
 pub fn router<S>(services: Services) -> Router<S> {
     let public = Router::new()
         .route("/auth", get(access::auth_status))
         .route("/auth/login", post(access::login))
-        .route("/auth/logout", post(access::logout));
+        .route("/auth/logout", post(access::logout))
+        .route("/license", get(license::status))
+        .route(
+            "/license/activate",
+            post(license::activate).layer(DefaultBodyLimit::max(64 << 10)),
+        );
 
     Router::new()
         .route("/auth/password", put(access::set_password))
@@ -151,6 +200,10 @@ pub fn router<S>(services: Services) -> Router<S> {
                 .layer(DefaultBodyLimit::max(16 << 20)),
         )
         .route_layer(axum::middleware::from_fn(run_to_completion))
+        .route_layer(axum::middleware::from_fn_with_state(
+            services.license.clone(),
+            license::enforce,
+        ))
         .route_layer(axum::middleware::from_fn_with_state(
             Arc::clone(&services.auth),
             auth::admin_only,

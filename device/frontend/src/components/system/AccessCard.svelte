@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { message } from "@/api/client";
   import { auth } from "@/stores/auth.svelte";

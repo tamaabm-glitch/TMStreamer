@@ -4,9 +4,11 @@
   import { control } from "@/stores/control.svelte";
   import { settings } from "@/stores/settings.svelte";
   import { auth } from "@/stores/auth.svelte";
+  import { license } from "@/stores/license.svelte";
   import { routeOf } from "@/lib/nav";
   import { route as address } from "@/stores/route.svelte";
   import LoginForm from "@/components/auth/LoginForm.svelte";
+  import LicensePage from "@/components/license/LicensePage.svelte";
   import Shell from "@/components/layout/Shell.svelte";
   import PageHeader from "@/components/layout/PageHeader.svelte";
   import StartupScreen from "@/components/layout/StartupScreen.svelte";
@@ -20,12 +22,34 @@
   // Reached from the sidebar by someone who's only watching
   const wantsLogin = $derived(address.path === "/login");
   const isWatchPage = $derived(page.id === "watch" && !wantsLogin);
+  const isLicenseTab = $derived(
+    page.id === "system" && route.tab === "license",
+  );
+  const isSetupPage = $derived(
+    !license.licensed &&
+      !wantsLogin &&
+      !isLicenseTab &&
+      ["input", "network", "display", "system", "logs", "performance"].includes(
+        page.id,
+      ),
+  );
+  const featureLocked = $derived(
+    page.id === "recording"
+      ? !license.canRecord
+      : page.id === "streaming" || page.id === "watch"
+        ? !license.canStream
+        : false,
+  );
+  const showLicensePage = $derived(
+    (!license.licensed && !isSetupPage) || (license.licensed && featureLocked),
+  );
 
   $effect(() => {
     if (wantsLogin && auth.loaded && auth.admin) address.go("/", true);
   });
 
   let theater = $state(false);
+  let licenseRefresh: ReturnType<typeof setInterval> | null = null;
 
   function onbeforeunload(e: BeforeUnloadEvent) {
     if (settings.dirty.length) e.preventDefault();
@@ -39,10 +63,13 @@
 
   onMount(async () => {
     await auth.load();
+    await license.load();
+    licenseRefresh = setInterval(() => void license.load(), 15_000);
     connect();
     auth.onChange(connect);
   });
   onDestroy(() => {
+    if (licenseRefresh) clearInterval(licenseRefresh);
     control.disconnect();
   });
 </script>
@@ -55,6 +82,14 @@
       <Unreachable />
     </StartupScreen>
   {/if}
+{:else if !license.loaded}
+  <StartupScreen>
+    <p class="text-sm text-muted">Checking TMStreamer license…</p>
+  </StartupScreen>
+{:else if showLicensePage && !wantsLogin}
+  <StartupScreen>
+    <LicensePage />
+  </StartupScreen>
 {:else if !auth.canView}
   <StartupScreen>
     <LoginForm reason="This device is password protected." />

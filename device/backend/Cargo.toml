@@ -3,7 +3,7 @@ name = "ystreamer"
 version = "0.1.2"
 edition = "2024"
 license = "GPL-3.0-only"
-description = "TMStreamer - NEW GALIH MULTIMEDIA: DJI video streaming, HDMI output, browser viewing and recording"
+description = "TMStreamer: DJI video streaming, HDMI output, browser viewing and recording"
 
 [[bin]]
 name = "ystreamer"
@@ -21,6 +21,21 @@ assets = [
     [
         "../packaging/config.txt",
         "usr/share/ystreamer/",
+        "644",
+    ],
+    [
+        "../packaging/tm-lic/registry.json",
+        "usr/share/ystreamer/tm-lic/registry.json",
+        "644",
+    ],
+    [
+        "../packaging/tm-lic/public_keys/README.txt",
+        "usr/share/ystreamer/tm-lic/public_keys/README.txt",
+        "644",
+    ],
+    [
+        "../packaging/tm-lic/public_keys/tmstreamer-prod-1.pem",
+        "usr/share/ystreamer/tm-lic/public_keys/tmstreamer-prod-1.pem",
         "644",
     ],
 ]
@@ -74,6 +89,7 @@ gpiocdev = "0.8.0"
 nusb = "0.2.7"
 rust-embed = { version = "8.12.0", features = ["mime-guess"] }
 ed25519-dalek = "3.0.0"
+time = { version = "0.3.49", features = ["parsing", "formatting"] }
 
 # Password hashing is far too slow unoptimized
 [profile.dev.package.sha2]

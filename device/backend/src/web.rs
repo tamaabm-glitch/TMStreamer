@@ -67,7 +67,11 @@ pub fn start(
         rt.block_on(async move {
             let api = Arc::new(rtc::build_api().expect("Failed to build webrtc API"));
             let (au_tx, _keep) = broadcast::channel::<AccessUnit>(1024);
-            tokio::spawn(rtc::assemble_loop(chunk_rx, au_tx.clone()));
+            tokio::spawn(rtc::assemble_loop(
+                chunk_rx,
+                au_tx.clone(),
+                Arc::clone(&services.streaming_enabled),
+            ));
 
             // Broadcast of camera-state JSON to all /control clients
             let (control_tx, _control_keep) = broadcast::channel::<String>(64);
@@ -107,6 +111,24 @@ pub fn start(
             tokio::spawn(link_watch(services.clone(), control_tx.clone()));
             tokio::spawn(crate::system::drives::watch());
             tokio::spawn(crate::system::update::watch(Arc::clone(&services.store)));
+
+            // Re-check the signed license periodically so an expired or revoked
+            // entitlement also stops active network outputs and recording.
+            {
+                let services = services.clone();
+                tokio::spawn(async move {
+                    loop {
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let current = services.license.status();
+                        let applied = services.applied_license_status.lock().unwrap().clone();
+                        if current != applied {
+                            // Covers expiry, key revocation, and clock synchronization
+                            // after boot. Activation updates the applied state directly.
+                            services.apply_entitlements();
+                        }
+                    }
+                });
+            }
             tokio::spawn(finish_recording_on_exit(Arc::clone(&services.recorder)));
             tokio::spawn(reload_login_on_hangup(Arc::clone(&services.auth)));
             tokio::spawn(recording_watch(
@@ -146,6 +168,10 @@ pub fn start(
                 .route("/video", get(video_ws::video_ws_handler))
                 .route("/control", get(control::control_ws_handler))
                 .route("/overlay.png", get(overlay_image))
+                .route_layer(axum::middleware::from_fn_with_state(
+                    services.license.clone(),
+                    crate::web::api::license::enforce,
+                ))
                 .route_layer(axum::middleware::from_fn_with_state(
                     Arc::clone(&services.auth),
                     crate::web::auth::viewers_only,

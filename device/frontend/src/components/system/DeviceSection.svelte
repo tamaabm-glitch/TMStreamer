@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import Segmented from "@/components/ui/Segmented.svelte";
   import { theme, type Theme } from "@/stores/theme.svelte";

@@ -1,4 +1,3 @@
-
 export type Theme = "auto" | "light" | "dark";
 
 const KEY = "ystreamer.theme";

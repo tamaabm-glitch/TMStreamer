@@ -43,6 +43,7 @@ pub struct Recorder {
     error: Mutex<Option<String>>,
     /// Cleared once auto-start has fired, so stopping by hand sticks
     auto_start_pending: AtomicBool,
+    enabled: AtomicBool,
 }
 
 #[derive(Serialize, Clone, PartialEq)]
@@ -149,6 +150,18 @@ impl Recorder {
             cfg: Mutex::new(cfg),
             error: Mutex::new(None),
             auto_start_pending: AtomicBool::new(auto),
+            enabled: AtomicBool::new(true),
+        }
+    }
+
+    /// Enables or disables recording according to the active license.
+    pub fn set_enabled(&self, enabled: bool) {
+        self.enabled.store(enabled, Ordering::Relaxed);
+        let auto_start = self.cfg.lock().unwrap().auto_start;
+        self.auto_start_pending
+            .store(enabled && auto_start, Ordering::Relaxed);
+        if !enabled && self.is_active() {
+            let _ = self.stop();
         }
     }
 
@@ -173,7 +186,10 @@ impl Recorder {
         let Some(session) = guard.as_mut() else {
             // Nothing recording: pick up auto-start on the first keyframe
             drop(guard);
-            if self.auto_start_pending.load(Ordering::Relaxed) && has_keyframe(data) {
+            if self.enabled.load(Ordering::Relaxed)
+                && self.auto_start_pending.load(Ordering::Relaxed)
+                && has_keyframe(data)
+            {
                 self.auto_start_pending.store(false, Ordering::Relaxed);
                 if let Err(e) = self.start_session(true) {
                     eprintln!("[rec] auto-start failed: {e}");
@@ -209,6 +225,9 @@ impl Recorder {
 
     fn start_session(&self, automatic: bool) -> Result<(), String> {
         let mut guard = self.session.lock().unwrap();
+        if !self.enabled.load(Ordering::Relaxed) {
+            return Err("Recording requires an active TMStreamer license".into());
+        }
         if guard.is_some() {
             return Err("Already recording".into());
         }

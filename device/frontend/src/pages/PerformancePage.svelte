@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { metrics } from "@/stores/metrics.svelte";
@@ -89,13 +88,9 @@
     s.mem_total?.findLast((v) => v !== null) ?? undefined,
   );
 
-  const temperature = $derived(
-    lines([["temp", "Processor", RED, true]]),
-  );
+  const temperature = $derived(lines([["temp", "Processor", RED, true]]));
 
-  const clock = $derived(
-    lines([["freq", "Clock", TEAL, true]]),
-  );
+  const clock = $derived(lines([["freq", "Clock", TEAL, true]]));
 
   const frameRate = $derived(
     lines([
@@ -122,9 +117,7 @@
     ]),
   );
 
-  const wifi = $derived(
-    lines([["wifi_dbm", "Signal", GREEN]]),
-  );
+  const wifi = $derived(lines([["wifi_dbm", "Signal", GREEN]]));
 
   const interfaces = $derived(
     [
@@ -177,8 +170,8 @@
 <div class="flex flex-col gap-4">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-[12px] text-muted">
-      TMStreamer performance monitoring. Recorded every second since the
-      service started; the last half hour is kept.
+      TMStreamer performance monitoring. Recorded every second since the service
+      started; the last half hour is kept.
     </p>
 
     <div class="w-full sm:w-80">
@@ -191,9 +184,9 @@
   {:else}
     {#if underVoltage}
       <p class="rounded-lg bg-down/10 px-4 py-3 text-[13px] text-down">
-        The power supply dipped below what the Pi needs during this period.
-        That causes glitches and USB drop-outs; use a stronger supply or a
-        shorter cable.
+        The power supply dipped below what the Pi needs during this period. That
+        causes glitches and USB drop-outs; use a stronger supply or a shorter
+        cable.
       </p>
     {/if}
 

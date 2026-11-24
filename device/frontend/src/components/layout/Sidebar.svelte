@@ -4,6 +4,7 @@
   import { recording } from "@/stores/recording.svelte";
   import { WATCH, NAV_GROUPS, type NavPage } from "@/lib/nav";
   import { auth } from "@/stores/auth.svelte";
+  import { license } from "@/stores/license.svelte";
   import { developer } from "@/stores/developer.svelte";
   import { message } from "@/api/client";
   import { snackbar } from "@/stores/snackbar.svelte";
@@ -88,6 +89,40 @@
 
   const isDirty = (p: NavPage) =>
     p.sections.some((s) => settings.dirty.includes(s));
+
+  const needsLogin = (_p: NavPage) => !auth.admin;
+
+  const iconTone: Record<string, string> = {
+    watch: "text-blue-400",
+    input: "text-cyan-400",
+    streaming: "text-teal-400",
+    recording: "text-red-400",
+    display: "text-sky-300",
+    network: "text-emerald-400",
+    system: "text-violet-400",
+    performance: "text-amber-300",
+    logs: "text-slate-300",
+    terminal: "text-orange-400",
+  };
+
+  const iconClass = (p: NavPage, active: boolean) =>
+    `h-4 w-4 shrink-0 ${iconTone[p.id] ?? "text-cyan-400"} nav-icon-3d ${active ? "nav-icon-active" : "nav-icon-idle"}`;
+
+  const licenseLocked = (p: NavPage) => {
+    if (!license.licensed) {
+      return ![
+        "input",
+        "network",
+        "display",
+        "system",
+        "logs",
+        "performance",
+      ].includes(p.id);
+    }
+    if (p.id === "recording") return !license.canRecord;
+    if (p.id === "streaming" || p.id === "watch") return !license.canStream;
+    return false;
+  };
 </script>
 
 <div class="flex h-full flex-col">
@@ -193,10 +228,7 @@
       ? 'bg-surface-2 text-fg'
       : 'text-muted hover:bg-surface-2/60 hover:text-fg'}"
   >
-    <p.icon
-      class="h-4 w-4 shrink-0 {active ? 'text-primary' : ''}"
-      aria-hidden="true"
-    />
+    <p.icon class={iconClass(p, active)} aria-hidden="true" />
     <span class="flex-1">{p.label}</span>
     {#if p.id === "recording" && transfer.running}
       <span title="Copying recordings">
@@ -214,8 +246,13 @@
       <span class="h-1.5 w-1.5 rounded-full bg-accent" title="Unsaved changes"
       ></span>
     {/if}
-    {#if p.id !== "watch" && !auth.admin}
-      <Lock class="h-3.5 w-3.5 text-faint" aria-label="Needs a login" />
+    {#if p.id !== "watch" && (needsLogin(p) || licenseLocked(p))}
+      <Lock
+        class="h-3.5 w-3.5 text-faint"
+        aria-label={licenseLocked(p)
+          ? "Needs a TMStreamer license"
+          : "Needs a login"}
+      />
     {/if}
   </a>
 {/snippet}

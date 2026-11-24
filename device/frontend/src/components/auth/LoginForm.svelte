@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { message } from "@/api/client";
   import { auth } from "@/stores/auth.svelte";
@@ -34,15 +33,12 @@
 >
   <div class="flex flex-col items-center gap-3 pb-2 text-center">
     <img
-      src="/logo.png"
-      alt="TMStreamer - NEW GALIH MULTIMEDIA"
-      class="h-auto w-full max-w-[240px] object-contain"
+      src="/logo.svg"
+      alt="TMStreamer"
+      class="h-auto w-full max-w-[96px] object-contain"
     />
     <div>
       <h2 class="text-[17px] font-semibold text-fg">TMStreamer</h2>
-      <p class="text-[11px] font-medium tracking-[0.2em] text-primary">
-        NEW GALIH MULTIMEDIA
-      </p>
     </div>
   </div>
 
@@ -87,7 +83,5 @@
     {busy ? "Checking…" : "Log in"}
   </button>
 
-  <p class="pt-2 text-center text-[10px] text-muted">
-    TMStreamer V1.0 · NEW GALIH MULTIMEDIA
-  </p>
+  <p class="pt-2 text-center text-[10px] text-muted">TMStreamer</p>
 </form>

@@ -121,6 +121,7 @@ export const SETTINGS_PAGES: NavPage[] = [
       { id: "general", label: "General", sections: ["device"] },
       { id: "about", label: "About", sections: [] },
       { id: "updates", label: "Updates", sections: ["advanced"] },
+      { id: "license", label: "License", sections: [] },
       { id: "service", label: "Service", sections: [] },
       { id: "configuration", label: "Configuration", sections: [] },
       {

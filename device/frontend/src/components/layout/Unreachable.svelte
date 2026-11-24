@@ -1,4 +1,3 @@
-
 <script lang="ts">
   import { auth } from "@/stores/auth.svelte";
   import { btn } from "@/components/ui/buttons";

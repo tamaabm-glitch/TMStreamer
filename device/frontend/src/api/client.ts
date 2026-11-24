@@ -22,6 +22,7 @@ import type {
 } from "@/types/system";
 import type { DumlStatus } from "@/types/duml";
 import type { AuthStatus } from "@/types/auth";
+import type { LicenseStatus } from "@/types/license";
 import type { InputStatus, UvcDevice } from "@/types/input";
 import type {
   ButtonStatus,
@@ -81,6 +82,13 @@ const at = (location?: string | null) =>
 
 export const api = {
   auth: () => request<AuthStatus>("GET", "/auth"),
+  license: () => request<LicenseStatus>("GET", "/license"),
+  activateLicense: (license: Blob) =>
+    request<LicenseStatus>(
+      "POST",
+      "/license/activate",
+      new Blob([license], { type: "application/json" }),
+    ),
   login: (password: string) =>
     request<void>("POST", "/auth/login", { password }),
   logout: () => request<void>("POST", "/auth/logout"),

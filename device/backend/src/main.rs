@@ -4,6 +4,7 @@ mod net;
 mod output;
 mod settings;
 mod system;
+mod tm_lic;
 mod web;
 
 use std::sync::Arc;
@@ -42,18 +43,31 @@ fn main() -> anyhow::Result<()> {
 fn run() -> anyhow::Result<()> {
     let store = Arc::new(settings::SettingsStore::load());
     let cfg = store.get();
+    let license = tm_lic::LicenseService::load();
+    let initial_license_status = license.status();
 
     // Outputs first, so the web server can reconfigure them from settings
     let overlay = overlay::Overlay::load(store.path().with_file_name("overlay.png"), &cfg.overlay);
     let player = GstPlayer::new(&cfg.display, Arc::clone(&overlay))?;
-    let rtsp_server = Arc::new(RtspServer::new(&cfg.rtsp)?);
-    let srt = SrtOutput::new(&cfg.srt);
-    let rtmp = RtmpOutput::new(&cfg.rtmp);
-    let udp = UdpOutput::new(&cfg.udp);
+    let mut rtsp_cfg = cfg.rtsp.clone();
+    rtsp_cfg.enabled = false;
+    let mut srt_cfg = cfg.srt.clone();
+    srt_cfg.enabled = false;
+    let mut rtmp_cfg = cfg.rtmp.clone();
+    rtmp_cfg.enabled = false;
+    let mut udp_cfg = cfg.udp.clone();
+    udp_cfg.enabled = false;
+    let rtsp_server = Arc::new(RtspServer::new(&rtsp_cfg)?);
+    let srt = SrtOutput::new(&srt_cfg);
+    let rtmp = RtmpOutput::new(&rtmp_cfg);
+    let udp = UdpOutput::new(&udp_cfg);
     let recorder = Arc::new(Recorder::new(cfg.recording.clone()));
+    recorder.set_enabled(false);
     // What a transfer onto the card left behind if the power went mid-copy
     output::transfer::clear_unfinished(&recorder.dir());
-    let button = button::RecordButton::start(&cfg.recording.button, Arc::clone(&recorder));
+    let mut button_cfg = cfg.recording.button.clone();
+    button_cfg.enabled = false;
+    let button = button::RecordButton::start(&button_cfg, Arc::clone(&recorder));
 
     input::gadget::ensure();
     let goggles = Goggles::new();
@@ -116,6 +130,9 @@ fn run() -> anyhow::Result<()> {
     let services = api::Services {
         store: Arc::clone(&store),
         auth,
+        license,
+        streaming_enabled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        applied_license_status: Arc::new(std::sync::Mutex::new(initial_license_status)),
         network: Arc::clone(&network),
         rtsp: Arc::clone(&rtsp_server),
         srt: Arc::clone(&srt),
@@ -136,6 +153,7 @@ fn run() -> anyhow::Result<()> {
         overlay: Arc::clone(&overlay),
     };
 
+    services.apply_entitlements();
     web::start(listener, services, web_rx, state_rx);
 
     let camera_poller = duml::camera::Poller::start(goggles.clone(), Arc::clone(&session));

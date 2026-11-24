@@ -1,5 +1,5 @@
 [Unit]
-Description=TMStreamer - NEW GALIH MULTIMEDIA
+Description=TMStreamer
 # ystreamer-data only exists on the image, where it puts the settings and
 # recordings on their own partition first
 After=NetworkManager.service systemd-modules-load.service ystreamer-data.service

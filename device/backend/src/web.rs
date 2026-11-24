@@ -147,6 +147,10 @@ pub fn start(
                 .route("/control", get(control::control_ws_handler))
                 .route("/overlay.png", get(overlay_image))
                 .route_layer(axum::middleware::from_fn_with_state(
+                    services.license.clone(),
+                    crate::web::api::license::enforce,
+                ))
+                .route_layer(axum::middleware::from_fn_with_state(
                     Arc::clone(&services.auth),
                     crate::web::auth::viewers_only,
                 ));

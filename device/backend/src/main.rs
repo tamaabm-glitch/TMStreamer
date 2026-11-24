@@ -44,8 +44,6 @@ fn run() -> anyhow::Result<()> {
     let store = Arc::new(settings::SettingsStore::load());
     let cfg = store.get();
     let license = tm_lic::LicenseService::load();
-    let streaming_licensed = license.has_feature("streaming");
-    let recording_licensed = license.has_feature("recording");
     let initial_license_status = license.status();
 
     // Outputs first, so the web server can reconfigure them from settings
@@ -64,11 +62,11 @@ fn run() -> anyhow::Result<()> {
     let rtmp = RtmpOutput::new(&rtmp_cfg);
     let udp = UdpOutput::new(&udp_cfg);
     let recorder = Arc::new(Recorder::new(cfg.recording.clone()));
-    recorder.set_enabled(recording_licensed);
+    recorder.set_enabled(false);
     // What a transfer onto the card left behind if the power went mid-copy
     output::transfer::clear_unfinished(&recorder.dir());
     let mut button_cfg = cfg.recording.button.clone();
-    button_cfg.enabled &= recording_licensed;
+    button_cfg.enabled = false;
     let button = button::RecordButton::start(&button_cfg, Arc::clone(&recorder));
 
     input::gadget::ensure();
@@ -133,7 +131,7 @@ fn run() -> anyhow::Result<()> {
         store: Arc::clone(&store),
         auth,
         license,
-        streaming_enabled: Arc::new(std::sync::atomic::AtomicBool::new(streaming_licensed)),
+        streaming_enabled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
         applied_license_status: Arc::new(std::sync::Mutex::new(initial_license_status)),
         network: Arc::clone(&network),
         rtsp: Arc::clone(&rtsp_server),

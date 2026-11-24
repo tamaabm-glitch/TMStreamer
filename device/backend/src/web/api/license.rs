@@ -126,7 +126,7 @@ async fn require(feature: &'static str, req: Request, next: Next) -> Response {
     let message = if status.message.is_empty() {
         format!("Fitur {feature} memerlukan lisensi TM-LIC yang valid.")
     } else {
-        status.message
+        status.message.clone()
     };
     (
         StatusCode::FORBIDDEN,

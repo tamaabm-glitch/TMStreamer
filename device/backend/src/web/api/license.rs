@@ -118,19 +118,39 @@ mod tests {
 
     #[test]
     fn gates_recording_routes_and_settings() {
-        assert_eq!(required_features("/recording/start", &Method::POST), &["recording"]);
-        assert_eq!(required_features("/settings/recording", &Method::PUT), &["recording"]);
+        assert_eq!(
+            required_features("/recording/start", &Method::POST),
+            &["recording"]
+        );
+        assert_eq!(
+            required_features("/settings/recording", &Method::PUT),
+            &["recording"]
+        );
     }
 
     #[test]
     fn gates_streaming_settings_and_full_settings_replacement() {
-        assert_eq!(required_features("/settings/srt", &Method::PUT), &["streaming"]);
-        assert_eq!(required_features("/settings", &Method::PUT), &["recording", "streaming"]);
+        assert_eq!(
+            required_features("/settings/srt", &Method::PUT),
+            &["streaming"]
+        );
+        assert_eq!(
+            required_features("/settings", &Method::PUT),
+            &["recording", "streaming"]
+        );
     }
 
     #[test]
     fn keeps_device_setup_and_hdmi_available_without_license() {
-        for path in ["/auth", "/license", "/network", "/input", "/display", "/system", "/system/logs"] {
+        for path in [
+            "/auth",
+            "/license",
+            "/network",
+            "/input",
+            "/display",
+            "/system",
+            "/system/logs",
+        ] {
             assert!(required_features(path, &Method::GET).is_empty(), "{path}");
         }
     }

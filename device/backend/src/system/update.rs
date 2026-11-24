@@ -16,6 +16,9 @@ const PUBLIC_KEY: &str = include_str!("../../../packaging/update-key.pub");
 /// release service and signing key are provisioned. Never fall back to the
 /// upstream YStreamer manifest.
 const MANIFEST_URL_ENV: &str = "TMSTREAMER_UPDATE_URL";
+// No TMStreamer-owned update signing key/service has been provisioned yet.
+// Keep every install path closed rather than trusting the upstream vendor key.
+const UPDATE_PIPELINE_ENABLED: bool = false;
 const MAX_PACKAGE_BYTES: u64 = 64 << 20;
 const PACKAGE: &str = "tmstreamer";
 /// Long enough after starting for the network to be up
@@ -229,6 +232,9 @@ pub async fn status() -> Status {
 
 /// Keep an uploaded package for installing, once it's proven to be ours
 pub async fn stage(deb: &[u8], signature: &str) -> Result<(), String> {
+    if !UPDATE_PIPELINE_ENABLED {
+        return Err("TMStreamer signed updates are not configured yet".into());
+    }
     verify(PUBLIC_KEY, deb, signature)?;
     fs::create_dir_all(DIR).map_err(|e| format!("Couldn't create {DIR}: {e}"))?;
     let upload = file("upload.deb");
@@ -249,6 +255,9 @@ pub fn discard() {
 }
 
 pub async fn install() -> Result<(), String> {
+    if !UPDATE_PIPELINE_ENABLED {
+        return Err("TMStreamer signed updates are not configured yet".into());
+    }
     let version = version_of(&file(STAGED))
         .await
         .ok_or("Upload a package first")?;
@@ -262,6 +271,9 @@ pub async fn install() -> Result<(), String> {
 }
 
 pub async fn rollback() -> Result<(), String> {
+    if !UPDATE_PIPELINE_ENABLED {
+        return Err("TMStreamer signed updates are not configured yet".into());
+    }
     let version = version_of(&file(PREVIOUS))
         .await
         .ok_or("There's no earlier version to go back to")?;

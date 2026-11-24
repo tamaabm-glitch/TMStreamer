@@ -61,15 +61,15 @@ pub fn router<S>(services: Services) -> Router<S> {
         .route("/auth", get(access::auth_status))
         .route("/auth/login", post(access::login))
         .route("/auth/logout", post(access::logout))
-        .route("/license/status", get(license::status))
-        .route(
-            "/license/activate",
-            post(license::activate).layer(DefaultBodyLimit::max(64 << 10)),
-        );
+        .route("/license/status", get(license::status));
 
     Router::new()
         .route("/auth/password", put(access::set_password))
         .route("/auth/viewing", put(access::set_viewing))
+        .route(
+            "/license/activate",
+            post(license::activate).layer(DefaultBodyLimit::max(64 << 10)),
+        )
         .route(
             "/settings",
             get(settings::get_settings)

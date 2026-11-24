@@ -57,12 +57,6 @@ impl LicenseStatus {
 /// which is required to read the protected machine identity and key registry.
 fn verify_at(license_path: Option<&Path>) -> LicenseStatus {
     let root = std::env::var("TM_LIC_ROOT").unwrap_or_else(|_| DEFAULT_ROOT.into());
-    let output = Command::new(
-        std::env::var("TM_LIC_PYTHON").unwrap_or_else(|_| "/usr/bin/python3".into()),
-    )
-    .arg("-m")
-    .arg("app.cli")
-    .arg("status");
     let mut command = Command::new(
         std::env::var("TM_LIC_PYTHON").unwrap_or_else(|_| "/usr/bin/python3".into()),
     );
@@ -114,7 +108,7 @@ pub async fn status() -> Json<LicenseStatus> {
 }
 
 async fn require(feature: &'static str, req: Request, next: Next) -> Response {
-    let status = tokio::task::spawn_blocking(verify).await.unwrap_or_else(|error| {
+    let status = tokio::task::spawn_blocking(|| verify_at(None)).await.unwrap_or_else(|error| {
         LicenseStatus::unverified(format!("TM-LIC verification task failed: {error}"))
     });
     if status.allows(feature) {

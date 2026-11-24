@@ -193,6 +193,7 @@ mod tests {
         let registry = serde_json::json!({
             "format": "TM-LIC-KEY-REGISTRY",
             "version": 1,
+            "active_key_id": "test-key",
             "keys": {"test-key": {"algorithm": "Ed25519", "status": "active"}}
         });
         let der = [PEM_PREFIX, signing.verifying_key().as_bytes()].concat();

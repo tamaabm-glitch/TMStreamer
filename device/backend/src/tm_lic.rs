@@ -36,7 +36,7 @@ fn read_public_key(path: &Path) -> Result<VerifyingKey, String> {
     let pem = fs::read_to_string(path).map_err(|e| format!("Public key tidak dapat dibaca: {e}"))?;
     let encoded: String = pem.lines()
         .filter(|line| !line.starts_with("-----"))
-        .flat_map(str::chars)
+        .flat_map(|line| line.chars())
         .filter(|c| !c.is_whitespace())
         .collect();
     let der = STANDARD.decode(encoded).map_err(|_| "Format PEM public key tidak valid".to_string())?;

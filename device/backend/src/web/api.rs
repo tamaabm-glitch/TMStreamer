@@ -72,10 +72,20 @@ pub fn router<S>(services: Services) -> Router<S> {
         .route("/auth/viewing", put(access::set_viewing))
         .route(
             "/settings",
-            get(settings::get_settings).put(settings::put_all),
+            get(settings::get_settings)
+                .put(settings::put_all)
+                .route_layer(axum::middleware::from_fn(license::settings_only)),
         )
-        .route("/settings/reset", post(settings::reset))
-        .route("/settings/{section}", put(settings::put_section))
+        .route(
+            "/settings/reset",
+            post(settings::reset)
+                .route_layer(axum::middleware::from_fn(license::settings_only)),
+        )
+        .route(
+            "/settings/{section}",
+            put(settings::put_section)
+                .route_layer(axum::middleware::from_fn(license::settings_only)),
+        )
         .route("/network", get(network::network_status))
         .route("/network/scan", get(network::network_scan))
         .route("/network/countries", get(network::network_countries))

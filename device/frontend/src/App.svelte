@@ -4,9 +4,11 @@
   import { control } from "@/stores/control.svelte";
   import { settings } from "@/stores/settings.svelte";
   import { auth } from "@/stores/auth.svelte";
+  import { license } from "@/stores/license.svelte";
   import { routeOf } from "@/lib/nav";
   import { route as address } from "@/stores/route.svelte";
   import LoginForm from "@/components/auth/LoginForm.svelte";
+  import LicensePage from "@/components/license/LicensePage.svelte";
   import Shell from "@/components/layout/Shell.svelte";
   import PageHeader from "@/components/layout/PageHeader.svelte";
   import StartupScreen from "@/components/layout/StartupScreen.svelte";
@@ -20,6 +22,11 @@
   // Reached from the sidebar by someone who's only watching
   const wantsLogin = $derived(address.path === "/login");
   const isWatchPage = $derived(page.id === "watch" && !wantsLogin);
+  const isSetupPage = $derived(
+    !license.licensed &&
+      !wantsLogin &&
+      ["network", "display", "system", "logs", "performance"].includes(page.id),
+  );
 
   $effect(() => {
     if (wantsLogin && auth.loaded && auth.admin) address.go("/", true);
@@ -39,6 +46,7 @@
 
   onMount(async () => {
     await auth.load();
+    await license.load();
     connect();
     auth.onChange(connect);
   });
@@ -58,6 +66,12 @@
 {:else if !auth.canView}
   <StartupScreen>
     <LoginForm reason="This device is password protected." />
+  </StartupScreen>
+{:else if !license.loaded}
+  <StartupScreen />
+{:else if !license.licensed && !isSetupPage}
+  <StartupScreen>
+    <LicensePage />
   </StartupScreen>
 {:else}
   <Shell

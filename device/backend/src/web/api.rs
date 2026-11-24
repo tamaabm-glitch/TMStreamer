@@ -1,5 +1,5 @@
 mod access;
-mod license;
+pub(crate) mod license;
 mod display;
 mod network;
 mod recording;

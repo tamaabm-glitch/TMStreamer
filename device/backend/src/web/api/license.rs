@@ -35,7 +35,7 @@ struct LicenseRequired {
     code: &'static str,
 }
 
-pub(super) async fn enforce(
+pub(crate) async fn enforce(
     axum::extract::State(license): axum::extract::State<crate::tm_lic::LicenseService>,
     request: Request,
     next: Next,
@@ -52,6 +52,8 @@ pub(super) async fn enforce(
         "/settings/rtsp" | "/settings/srt" | "/settings/rtmp"
         | "/settings/udp" | "/settings/viewer"
     ) && *method == axum::http::Method::PUT {
+        &["streaming"]
+    } else if matches!(path, "/offer" | "/video" | "/control") {
         &["streaming"]
     } else if path == "/settings" && *method == axum::http::Method::PUT {
         &["recording", "streaming"]

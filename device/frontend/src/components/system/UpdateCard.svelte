@@ -31,8 +31,8 @@
       <div class="border-t border-line px-4 py-3">
         <p class="text-[13px] text-down">
           {#if status.failure.reverted}
-            Version {status.failure.version} did not start. The device returned
-            to {status.current}.
+            Version {status.failure.version} did not start. The device returned to
+            {status.current}.
           {:else}
             Installing version {status.failure.version} failed.
           {/if}

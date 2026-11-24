@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use axum::{Json, extract::State, http::StatusCode};
@@ -48,11 +48,15 @@ pub(super) fn build_api() -> anyhow::Result<API> {
 pub(super) async fn assemble_loop(
     mut rx: mpsc::UnboundedReceiver<Vec<u8>>,
     au_tx: broadcast::Sender<AccessUnit>,
+    streaming_enabled: Arc<AtomicBool>,
 ) {
     let mut assembler = AccessUnitAssembler::new();
     while let Some(chunk) = rx.recv().await {
         assembler.push(&chunk);
         while let Some(bytes) = assembler.next_au() {
+            if !streaming_enabled.load(Ordering::Relaxed) {
+                continue;
+            }
             let keyframe = h264::has_keyframe(&bytes);
             let _ = au_tx.send(AccessUnit {
                 data: bytes::Bytes::from(bytes),

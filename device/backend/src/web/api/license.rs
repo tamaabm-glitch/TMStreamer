@@ -88,12 +88,12 @@ fn verify_at(license_path: Option<&Path>) -> LicenseStatus {
     {
         return LicenseStatus {
             activated: false,
-            status: if status.status.is_empty() { "UNLICENSED".into() } else { status.status },
+            status: if status.status.is_empty() { "UNLICENSED".into() } else { status.status.clone() },
             features: Vec::new(),
             message: if status.message.is_empty() {
                 "Lisensi TM-LIC belum aktif atau tidak dapat diverifikasi.".into()
             } else {
-                status.message
+                status.message.clone()
             },
             ..status
         };

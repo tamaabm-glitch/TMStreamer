@@ -46,7 +46,7 @@ fn builds_an_android_accessory_with_a_serial_function() {
     assert_eq!(sys.read("idVendor"), "0x18d1");
     assert_eq!(sys.read("idProduct"), "0x2d00");
     assert_eq!(sys.read("bDeviceClass"), "0xFF");
-    assert_eq!(sys.read("strings/0x409/manufacturer"), "YStreamer");
+    assert_eq!(sys.read("strings/0x409/manufacturer"), "TMStreamer");
     assert_eq!(sys.read("configs/c.1/MaxPower"), "250");
     assert_eq!(sys.read("UDC"), "fe980000.usb");
 

@@ -73,17 +73,17 @@
       <Unreachable />
     </StartupScreen>
   {/if}
-{:else if !auth.canView}
-  <StartupScreen>
-    <LoginForm reason="This device is password protected." />
-  </StartupScreen>
 {:else if !license.loaded}
   <StartupScreen>
     <p class="text-sm text-muted">Checking TMStreamer license…</p>
   </StartupScreen>
-{:else if showLicensePage}
+{:else if showLicensePage && !wantsLogin}
   <StartupScreen>
     <LicensePage />
+  </StartupScreen>
+{:else if !auth.canView}
+  <StartupScreen>
+    <LoginForm reason="This device is password protected." />
   </StartupScreen>
 {:else}
   <Shell

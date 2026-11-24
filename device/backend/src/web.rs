@@ -117,17 +117,14 @@ pub fn start(
             {
                 let services = services.clone();
                 tokio::spawn(async move {
-                    let mut previous = services.license.status();
                     loop {
                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                         let current = services.license.status();
-                        if current != previous {
-                            // Activation applies new entitlements in its handler.
-                            // This watcher only needs to revoke runtime access.
-                            if !current.licensed {
-                                services.apply_entitlements();
-                            }
-                            previous = current;
+                        let applied = services.applied_license_status.lock().unwrap().clone();
+                        if current != applied {
+                            // Covers expiry, key revocation, and clock synchronization
+                            // after boot. Activation updates the applied state directly.
+                            services.apply_entitlements();
                         }
                     }
                 });

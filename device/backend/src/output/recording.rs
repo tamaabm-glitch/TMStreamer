@@ -332,6 +332,20 @@ impl Recorder {
         Ok(())
     }
 
+    /// Stop a paid recording when its TM-LIC entitlement is unavailable.
+    /// Keep Auto Record armed so a later valid activation can resume it.
+    pub fn stop_for_license(&self) {
+        let auto_start = self.cfg.lock().unwrap().auto_start;
+        let session = self.session.lock().unwrap().take();
+        if let Some(session) = session {
+            finish(&session);
+            eprintln!("[rec] stopped: TM-LIC recording entitlement unavailable");
+            *self.error.lock().unwrap() =
+                Some("Recording stopped: TM-LIC recording entitlement unavailable".into());
+        }
+        self.auto_start_pending.store(auto_start, Ordering::Relaxed);
+    }
+
     fn stop_with_error(&self, reason: String) {
         if let Some(session) = self.session.lock().unwrap().take() {
             finish(&session);

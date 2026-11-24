@@ -43,12 +43,14 @@
   async function activate() {
     if (!selected || busy) return;
     busy = true;
+    let activated = false;
     error = null;
     notice = null;
     try {
       status = await api.activateLicense(selected);
       selected = null;
-      notice = "Lisensi TM-LIC berhasil diverifikasi dan diaktifkan.";
+      activated = true;
+      notice = "Lisensi TM-LIC berhasil diverifikasi. Restart layanan TMStreamer untuk mengaktifkan seluruh output.";
       const input = document.getElementById("tm-license-file") as HTMLInputElement | null;
       if (input) input.value = "";
     } catch (e) {
@@ -56,6 +58,7 @@
     } finally {
       busy = false;
       await refresh();
+      if (activated) window.location.reload();
     }
   }
 

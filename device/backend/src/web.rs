@@ -142,8 +142,19 @@ pub fn start(
             }
 
             let watching = Router::new()
-                .route("/offer", post(rtc::offer_handler))
-                .route("/video", get(video_ws::video_ws_handler))
+                .route(
+                    "/offer",
+                    post(rtc::offer_handler).route_layer(axum::middleware::from_fn(
+                        crate::web::api::license::streaming_only,
+                    )),
+                )
+                .route(
+                    "/video",
+                    get(video_ws::video_ws_handler).route_layer(axum::middleware::from_fn(
+                        crate::web::api::license::streaming_only,
+                    )),
+                )
+                // DJI camera control remains available even when streaming is unlicensed.
                 .route("/control", get(control::control_ws_handler))
                 .route("/overlay.png", get(overlay_image))
                 .route_layer(axum::middleware::from_fn_with_state(

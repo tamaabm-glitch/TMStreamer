@@ -81,3 +81,41 @@ jobs:
       - run: mise run frontend:check
       - name: Build
         run: mise run frontend:build
+
+  package:
+    name: Debian ARM64 package
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install GStreamer headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libglib2.0-dev libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev libgstrtspserver-1.0-dev
+      - uses: jdx/mise-action@v5
+      - name: Build Debian ARM64 package
+        run: mise run device:package
+      - name: Audit Debian package and maintainer scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(find device/backend/target/debian -maxdepth 1 -type f -name 'tmstreamer_*_arm64.deb' -print -quit)"
+          test -n "$deb"
+          test "$(dpkg-deb -f "$deb" Package)" = "tmstreamer"
+          test "$(dpkg-deb -f "$deb" Architecture)" = "arm64"
+          dpkg-deb --contents "$deb" | grep -Fq "usr/bin/tmstreamer"
+          dpkg-deb --contents "$deb" | grep -Fq "usr/lib/systemd/system/tmstreamer.service"
+          control="$(mktemp -d)"
+          trap 'rm -rf "$control"' EXIT
+          dpkg-deb --control "$deb" "$control"
+          for script in postinst prerm postrm; do
+            test -x "$control/$script"
+            if grep -Eq 'systemctl[[:space:]]+(enable|start)|deb-systemd-invoke[[:space:]]+(enable|start)' "$control/$script"; then
+              echo "Unsafe automatic service activation found in $script" >&2
+              exit 1
+            fi
+          done
+          echo "PASS: ARM64 package identity, executable, service unit, maintainer-script permissions and passive install lifecycle"

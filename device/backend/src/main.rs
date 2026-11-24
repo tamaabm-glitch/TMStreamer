@@ -51,13 +51,13 @@ fn run() -> anyhow::Result<()> {
     let overlay = overlay::Overlay::load(store.path().with_file_name("overlay.png"), &cfg.overlay);
     let player = GstPlayer::new(&cfg.display, Arc::clone(&overlay))?;
     let mut rtsp_cfg = cfg.rtsp.clone();
-    rtsp_cfg.enabled &= streaming_licensed;
+    rtsp_cfg.enabled = false;
     let mut srt_cfg = cfg.srt.clone();
-    srt_cfg.enabled &= streaming_licensed;
+    srt_cfg.enabled = false;
     let mut rtmp_cfg = cfg.rtmp.clone();
-    rtmp_cfg.enabled &= streaming_licensed;
+    rtmp_cfg.enabled = false;
     let mut udp_cfg = cfg.udp.clone();
-    udp_cfg.enabled &= streaming_licensed;
+    udp_cfg.enabled = false;
     let rtsp_server = Arc::new(RtspServer::new(&rtsp_cfg)?);
     let srt = SrtOutput::new(&srt_cfg);
     let rtmp = RtmpOutput::new(&rtmp_cfg);

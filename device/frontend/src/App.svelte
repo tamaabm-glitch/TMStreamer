@@ -43,6 +43,7 @@
   });
 
   let theater = $state(false);
+  let licenseRefresh: ReturnType<typeof setInterval> | null = null;
 
   function onbeforeunload(e: BeforeUnloadEvent) {
     if (settings.dirty.length) e.preventDefault();
@@ -57,10 +58,12 @@
   onMount(async () => {
     await auth.load();
     await license.load();
+    licenseRefresh = setInterval(() => void license.load(), 15_000);
     connect();
     auth.onChange(connect);
   });
   onDestroy(() => {
+    if (licenseRefresh) clearInterval(licenseRefresh);
     control.disconnect();
   });
 </script>

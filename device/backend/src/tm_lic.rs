@@ -48,6 +48,56 @@ fn read_public_key(path: &Path) -> Result<VerifyingKey, String> {
     VerifyingKey::from_bytes(&raw).map_err(|_| "Public key Ed25519 tidak valid".into())
 }
 
+/// Serialize JSON exactly like Python json.dumps(sort_keys=True,
+/// separators=(",", ":"), ensure_ascii=False), independent of serde_json Map features.
+fn canonical_json(value: &Value) -> Result<Vec<u8>, String> {
+    fn append(value: &Value, output: &mut String) -> Result<(), String> {
+        match value {
+            Value::Null => output.push_str("null"),
+            Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
+            Value::Number(value) => output.push_str(&value.to_string()),
+            Value::String(value) => output.push_str(
+                &serde_json::to_string(value)
+                    .map_err(|_| "String payload tidak dapat diserialisasi".to_string())?
+            ),
+            Value::Array(values) => {
+                output.push('[');
+                for (index, item) in values.iter().enumerate() {
+                    if index != 0 {
+                        output.push(',');
+                    }
+                    append(item, output)?;
+                }
+                output.push(']');
+            }
+            Value::Object(values) => {
+                output.push('{');
+                let mut keys: Vec<&str> = values.keys().map(String::as_str).collect();
+                keys.sort_unstable();
+                for (index, key) in keys.into_iter().enumerate() {
+                    if index != 0 {
+                        output.push(',');
+                    }
+                    output.push_str(
+                        &serde_json::to_string(key)
+                            .map_err(|_| "Key payload tidak dapat diserialisasi".to_string())?
+                    );
+                    output.push(':');
+                    if let Some(item) = values.get(key) {
+                        append(item, output)?;
+                    }
+                }
+                output.push('}');
+            }
+        }
+        Ok(())
+    }
+
+    let mut output = String::new();
+    append(value, &mut output)?;
+    Ok(output.into_bytes())
+}
+
 /// Verify a TM-LIC envelope against the active key registry and expected device ID.
 /// serde_json's default Map is key-sorted (preserve_order is not enabled), matching
 /// Python json.dumps(sort_keys=True, separators=(",", ":"), ensure_ascii=False).
@@ -111,8 +161,7 @@ pub fn verify_envelope(
         .map_err(|_| "Encoding signature tidak valid".to_string())?;
     let signature = Signature::try_from(signature_bytes.as_slice())
         .map_err(|_| "Panjang signature tidak valid".to_string())?;
-    let canonical_payload = serde_json::to_vec(payload)
-        .map_err(|_| "Payload tidak dapat diserialisasi".to_string())?;
+    let canonical_payload = canonical_json(payload)?;
     public_key.verify_strict(&canonical_payload, &signature)
         .map_err(|_| "Tanda tangan digital tidak valid".to_string())?;
 
@@ -426,6 +475,16 @@ mod tests {
             STANDARD.encode(der)
         )).unwrap();
         (envelope, registry, dir)
+    }
+
+    #[test]
+    fn canonical_json_sorts_nested_keys_and_preserves_unicode() {
+        let value = serde_json::json!({
+            "z": 1,
+            "a": {"é": "✓", "b": null}
+        });
+        let encoded = String::from_utf8(canonical_json(&value).unwrap()).unwrap();
+        assert_eq!(encoded, r#"{"a":{"b":null,"é":"✓"},"z":1}"#);
     }
 
     #[test]

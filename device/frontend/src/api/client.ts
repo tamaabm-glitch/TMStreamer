@@ -22,6 +22,7 @@ import type {
 } from "@/types/system";
 import type { DumlStatus } from "@/types/duml";
 import type { AuthStatus } from "@/types/auth";
+import type { LicenseStatus } from "@/types/license";
 import type { InputStatus, UvcDevice } from "@/types/input";
 import type {
   ButtonStatus,
@@ -80,6 +81,9 @@ const at = (location?: string | null) =>
   location ? `?location=${encodeURIComponent(location)}` : "";
 
 export const api = {
+  licenseStatus: () => request<LicenseStatus>("GET", "/license/status"),
+  activateLicense: (file: File) =>
+    request<LicenseStatus>("POST", "/license/activate", new Blob([file], { type: "application/json" })),
   auth: () => request<AuthStatus>("GET", "/auth"),
   login: (password: string) =>
     request<void>("POST", "/auth/login", { password }),

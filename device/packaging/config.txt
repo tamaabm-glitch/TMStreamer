@@ -1,2 +1,1 @@
-dtoverlay=dwc2,dr_mode=peripheral
-gpu_mem=256
+# TMStreamer does not modify firmware boot configuration during package install.

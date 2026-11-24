@@ -24,6 +24,7 @@ fn update_public_key() -> Result<&'static str, String> {
 fn update_public_key() -> Result<&'static str, String> {
     Err("TMStreamer update signing key is not configured".into())
 }
+
 /// TMStreamer updates are intentionally disabled until its own signed
 /// release service and signing key are provisioned. Never fall back to the
 /// upstream YStreamer manifest.

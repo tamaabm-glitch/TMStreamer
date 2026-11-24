@@ -205,6 +205,11 @@ impl LicenseService {
         self.machine_id.as_deref().map_err(Clone::clone)
     }
 
+    pub fn has_feature(&self, feature: &str) -> bool {
+        let status = self.status();
+        status.licensed && status.features.iter().any(|item| item == feature)
+    }
+
     pub fn status(&self) -> LicenseStatus {
         let machine_id = match &self.machine_id {
             Ok(value) => value.clone(),

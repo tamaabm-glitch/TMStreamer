@@ -90,6 +90,9 @@
   const isDirty = (p: NavPage) =>
     p.sections.some((s) => settings.dirty.includes(s));
 
+  const needsLogin = (p: NavPage) =>
+    !auth.admin && !(p.id === "license" && !license.licensed);
+
   const licenseLocked = (p: NavPage) => {
     if (!license.licensed) {
       return !["input", "network", "display", "system", "logs", "performance", "license"].includes(p.id);
@@ -224,7 +227,7 @@
       <span class="h-1.5 w-1.5 rounded-full bg-accent" title="Unsaved changes"
       ></span>
     {/if}
-    {#if p.id !== "watch" && (!auth.admin || licenseLocked(p))}
+    {#if p.id !== "watch" && (needsLogin(p) || licenseLocked(p))}
       <Lock
         class="h-3.5 w-3.5 text-faint"
         aria-label={licenseLocked(p) ? "Needs a TMStreamer license" : "Needs a login"}

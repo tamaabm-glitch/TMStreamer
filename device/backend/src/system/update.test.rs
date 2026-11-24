@@ -93,14 +93,18 @@ fn only_official_github_release_package_urls_are_accepted() {
     )
     .is_ok());
     assert!(validate_release_package_url("https://example.com/tmstreamer.deb").is_err());
-    assert!(validate_release_package_url(
-        "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb"
-    )
-    .is_err());
-    assert!(validate_release_package_url(
-        "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb"
-    )
-    .is_err());
+    assert!(
+        validate_release_package_url(
+            "https://github.com/other/repo/releases/download/v0.1.3/tmstreamer.deb"
+        )
+        .is_err()
+    );
+    assert!(
+        validate_release_package_url(
+            "https://github.com/tamaabm-glitch/TMStreamer/releases/download/v0.1.3/../../evil.deb"
+        )
+        .is_err()
+    );
 }
 
 #[test]
